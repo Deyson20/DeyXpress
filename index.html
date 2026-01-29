@@ -1,0 +1,171 @@
+<!DOCTYPE html> 
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEYXPRESS - Pago Contraentrega</title>
+  
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #f1f5f9
+    }
+    
+    .no-scrollbar::-webkit-scrollbar {
+      display: none
+    }
+  </style>
+  
+  <meta property="og:image" content="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png">
+</head>
+
+<body class="text-slate-900">
+  
+  <nav class="bg-white border-b sticky top-0 z-40">
+    <div class="container mx-auto px-4 py-3 flex items-center gap-3 justify-between">
+      
+      <button onclick="toggleCategoriesMenu()" class="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+        <i class="fas fa-bars"></i>
+      </button>
+      
+      <div onclick="location.reload()" class="flex items-center cursor-pointer">
+        <img src="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png" alt="Logo DEYXPRESS" class="h-12 w-auto object-contain hover:scale-105 transition-transform">
+      </div>
+      
+      
+      <div class="hidden sm:block relative w-full max-w-md">
+        <input id="searchInput" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500">
+        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+      </div>
+      
+      <div class="flex gap-2">
+        <button onclick="toggleMobileSearch()" class="sm:hidden p-3 bg-slate-100 rounded-full">
+          <i class="fas fa-search"></i>
+        </button>
+        
+        <button onclick="toggleCart()" class="relative p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+          <i class="fas fa-shopping-cart"></i>
+          <span id="cartCounter" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+        </button>
+      </div>
+    </div>
+    
+    <div id="mobileSearch" class="hidden px-4 py-3 border-t bg-white">
+      <input id="searchInputMobile" placeholder="Buscar productos..." class="w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500">
+    </div>
+  </nav>
+  
+  <div id="categoriesMenu" class="hidden absolute w-full bg-white shadow-xl z-30">
+    <div id="categoriesMenuList" class="container mx-auto px-4 py-4 flex flex-col gap-2"></div>
+  </div>
+  
+  <div class="bg-indigo-600 text-white py-2.5 shadow-md">
+    <div class="container mx-auto px-4 text-center text-sm font-bold flex items-center justify-center gap-3">
+      <i class="fas fa-truck-moving animate-bounce"></i>
+      PEDIDOS POR WHATSAPP - ¡PAGA AL RECIBIR EN CASA!
+    </div>
+  </div>
+  
+  <main class="container mx-auto px-4 py-8 min-h-screen">
+    <div id="catalogView">
+      <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
+    </div>
+    
+    <div id="productDetailView" class="hidden animate-fade-in">
+      <button onclick="showCatalog()" class="mb-6 flex items-center gap-2 text-indigo-600 font-bold">
+        <i class="fas fa-arrow-left"></i> Volver al catálogo
+      </button>
+      <div id="detailContent"></div>
+    </div>
+  </main>
+  
+  
+  
+  <footer class="bg-white border-t mt-12">
+    <div class="container mx-auto px-4 py-12">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-10 text-center md:text-left">
+        
+        <div>
+          <p class="text-slate-500 leading-relaxed text-sm">
+            Implementamos el sistema de <b>Pago Contraentrega</b> para tu total seguridad y confianza.
+          </p>
+        </div>
+        
+        <div>
+          <ul class="space-y-3 text-slate-600 text-sm">
+            <li class="flex items-center gap-2 justify-center md:justify-start text-indigo-600 font-semibold">
+              <i class="fas fa-check-circle"></i> Envío Garantizado
+            </li>
+          </ul>
+        </div>
+        
+        <div>
+          <h3 class="font-bold text-lg mb-4 text-slate-800">Atención Directa</h3>
+          <div class="flex flex-col gap-4 items-center md:items-start">
+            <a href="https://wa.me/573166093629" target="_blank" class="bg-green-100 text-green-700 px-4 py-2 rounded-full flex items-center gap-2 hover:bg-green-200 transition font-bold text-sm">
+              <i class="fab fa-whatsapp text-lg"></i>
+              WhatsApp
+            </a>
+            <p class="text-xs text-slate-400 italic text-center md:text-left">Respondemos todas tus dudas sobre productos.</p>
+            <div class="flex gap-4">
+              <a href="https://www.facebook.com/share/14bgCzZeFRj/" target="_blank" rel="noopener noreferrer" class="bg-indigo-100 text-indigo-600 w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm" title="Síguenos en Facebook">
+                <i class="fab fa-facebook-f"></i>
+              </a>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t mt-12 pt-8 text-center text-slate-400 text-xs tracking-widest uppercase">
+        <p>&copy; 2026 DEYXPRESS - Tu Tienda Online de Pago Contraentrega.</p>
+        <div class="mt-4 flex justify-center gap-6 lowercase tracking-normal font-semibold">
+          <button onclick="openPolicy('terms')" class="hover:text-indigo-600">Términos y Condiciones</button>
+          <button onclick="openPolicy('privacy')" class="hover:text-indigo-600">Política de Privacidad</button>
+        </div>
+      </div>
+      
+    </div>
+  </footer>
+  
+  
+  
+  <div id="cartSidebar" class="fixed top-0 right-0 h-full w-full sm:max-w-md bg-white shadow-2xl translate-x-full transition-transform z-50 flex flex-col">
+    <div class="p-4 border-b flex justify-between items-center bg-indigo-50">
+      <h3 class="font-bold flex items-center gap-2 text-indigo-900"><i class="fas fa-shopping-bag"></i> Resumen de Pedido</h3>
+      <button onclick="toggleCart()"><i class="fas fa-times text-xl text-slate-400 hover:text-red-500"></i></button>
+    </div>
+    
+    <div id="cartItems" class="p-4 space-y-3 flex-1 overflow-y-auto bg-slate-50"></div>
+    
+    <div class="p-6 border-t bg-white shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <div class="flex justify-between font-black text-xl mb-4 text-slate-800">
+        <span>Total a Pagar:</span><span id="cartTotal" class="text-indigo-600">$0</span>
+      </div>
+      <button onclick="confirmOrder()" class="w-full bg-green-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-green-700 transition flex items-center justify-center gap-2 text-lg">
+        <i class="fab fa-whatsapp"></i> FINALIZAR POR WHATSAPP
+      </button>
+      <p class="text-center text-[10px] text-slate-400 mt-4 uppercase tracking-tighter">🔒 Paga al recibir | Envío seguro</p>
+    </div>
+  </div>
+  
+  <div id="policyModal" class="hidden fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-8 relative shadow-2xl">
+      <button onclick="closePolicy()" class="absolute top-4 right-4 text-slate-400 hover:text-slate-900 text-2xl">&times;</button>
+      <div id="policyText" class="prose prose-slate prose-sm text-left">
+      </div>
+    </div>
+  </div>
+  
+  
+  <script src="productos.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
