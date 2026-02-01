@@ -2,30 +2,51 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // Ruta para obtener todos los productos
+    // Cabeceras de seguridad para permitir conexión desde tu web
+    const corsHeaders = {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type",
+    };
+
+    // Responder a la verificación del navegador
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
+    // LEER PRODUCTOS
     if (url.pathname === "/api/productos" && request.method === "GET") {
-      const { results } = await env.DB.prepare(
-        "SELECT * FROM productos"
-      ).all();
-      
+      const { results } = await env.DB.prepare("SELECT * FROM productos").all();
       return new Response(JSON.stringify(results), {
-        headers: { 
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*" // Importante para que tu index.html pueda leerlo
-        }
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // Ruta para que el Admin guarde productos (POST)
+    // GUARDAR PRODUCTOS
     if (url.pathname === "/api/productos" && request.method === "POST") {
-      const producto = await request.json();
-      await env.DB.prepare(
-        "INSERT INTO productos (id, name, price, category, description, images) VALUES (?, ?, ?, ?, ?, ?)"
-      ).bind(producto.id, producto.name, producto.price, producto.category, producto.description, JSON.stringify(producto.images)).run();
-      
-      return new Response("Producto guardado", { status: 201 });
+      try {
+        const p = await request.json();
+        
+        // INSERT OR REPLACE para que permita editar si el ID ya existe
+        await env.DB.prepare(
+          "INSERT OR REPLACE INTO productos (id, name, price, category, description, images, video, variants) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        ).bind(
+          p.id, 
+          p.name, 
+          p.price, 
+          p.category, 
+          p.description, 
+          JSON.stringify(p.images),
+          p.video || "",
+          JSON.stringify(p.variants || [])
+        ).run();
+        
+        return new Response("OK", { status: 201, headers: corsHeaders });
+      } catch (err) {
+        return new Response(err.message, { status: 500, headers: corsHeaders });
+      }
     }
 
-    return new Response("Ruta no encontrada", { status: 404 });
+    return new Response("Not Found", { status: 404, headers: corsHeaders });
   }
 };
