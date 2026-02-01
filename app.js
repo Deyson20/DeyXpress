@@ -1,3 +1,24 @@
+let productos = []; // Empezamos con la lista vacía
+
+async function cargarProductosDesdeSQL() {
+  const urlWorker = "https://deyxpress.pages.dev/"; // <--- PEGA TU ENLACE AQUÍ
+  
+  try {
+    const response = await fetch(urlWorker);
+    productos = await response.json(); // Llenamos la lista con lo que hay en SQL
+    
+    // Ejecutamos las funciones que ya tenías para mostrar todo
+    loadCategories();
+    renderProducts();
+  } catch (error) {
+    console.error("No se pudieron cargar los productos:", error);
+  }
+}
+
+// Reemplaza tu antigua llamada a renderProducts() por esta:
+cargarProductosDesdeSQL();
+
+
 const grid = document.getElementById("productGrid");
 const categoriesMenuList = document.getElementById("categoriesMenuList");
 const cartSidebar = document.getElementById("cartSidebar");

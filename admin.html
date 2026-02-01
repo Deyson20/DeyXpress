@@ -129,38 +129,38 @@
     }
     
     async function guardarProducto() {
-      const id = document.getElementById('editIndex').value === "-1" ?
-        Date.now() :
-        parseInt(document.getElementById('editIndex').value);
-      
-      const nuevoProducto = {
-        id: id,
-        name: document.getElementById('name').value,
-        price: parseFloat(document.getElementById('price').value),
-        category: document.getElementById('category').value,
-        description: document.getElementById('description').value,
-        images: document.getElementById('images').value.split(',').map(img => img.trim()),
-        video: document.getElementById('video').value,
-        variants: document.getElementById('variants').value.split(',').map(v => v.trim())
-      };
-      
-      // --- NUEVO: Enviar a la base de datos ---
-      try {
-        const response = await fetch("TU_URL_DE_WORKER/api/productos", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevoProducto)
-        });
-        
-        if (response.ok) {
-          alert("¡Producto guardado en la nube!");
-          location.reload(); // Recarga para ver los cambios
-        }
-      } catch (error) {
-        console.error("Error al guardar:", error);
-      }
+  const id = document.getElementById('editIndex').value === "-1" 
+             ? Date.now() 
+             : parseInt(document.getElementById('editIndex').value);
+
+  const nuevoProducto = {
+    id: id,
+    name: document.getElementById('name').value,
+    price: parseFloat(document.getElementById('price').value),
+    category: document.getElementById('category').value,
+    description: document.getElementById('description').value,
+    images: document.getElementById('images').value.split(',').map(img => img.trim()),
+    video: document.getElementById('video').value,
+    variants: document.getElementById('variants').value.split(',').map(v => v.trim())
+  };
+
+  // --- NUEVO: Enviar a la base de datos ---
+  try {
+    const response = await fetch("https://deyxpress.pages.dev/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevoProducto)
+    });
+
+    if (response.ok) {
+      alert("¡Producto guardado en la nube!");
+      location.reload(); // Recarga para ver los cambios
     }
-    
+  } catch (error) {
+    console.error("Error al guardar:", error);
+  }
+}
+
     
     function cargarParaEditar(index) {
       const p = copiaProductos[index];
