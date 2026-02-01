@@ -4,7 +4,7 @@ const productos = [
     "name": "Computador Didáctico Niños",
     "price": 55000,
     "category": "Tecnología",
-    "video": "https://iteraplay.com/url/IuU64F",
+    "video": "https://www.youtube.com/embed/iqKu0HK7GmU",
     "variants": [
       "Azul"
     ],
@@ -44,21 +44,5 @@ const productos = [
       "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1862956/1751057905CAR%201.jpg"
     ],
     "description": "El Bluetooth en el contexto automotriz ha revolucionado la forma en que los conductores interactúan con sus vehículos y dispositivos móviles. La tecnología de conexión inalámbrica Bluetooth permite a los conductores sincronizar sus teléfonos inteligentes u otros dispositivos compatibles con el sistema de entretenimiento del automóvil, proporcionando una experiencia de conducción más segura, cómoda y conectada."
-  },
-  {
-    "id": 1769866263111,
-    "name": "Maquina Burbuja Mickey Y Minnie Juguete",
-    "price": 80000,
-    "category": "Jugueteria",
-    "video": "",
-    "variants": [],
-    "images": [
-      "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1473449/1731540404Pistola%20Mickey%20mause%203.jpg",
-      "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1473449/1731540404Pistola%20Mickey%20mause.jpg",
-      "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1473449/1731540406Pistola%20Mickey%20mause%202.jpg",
-      "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1473449/1731540405Pistola%20Mickey%20mause%205.jpg",
-      "https://d39ru7awumhhs2.cloudfront.net/colombia/products/1473449/1731540405Pistola%20Mickey%20mause%201.jpg"
-    ],
-    "description": "Esta máquina de burbujas a pilas, la fuente definitiva de diversión y emoción burbujeante para jugar al aire libre.\nEsta innovadora máquina está diseñada para soplar una increíble cantidad de burbujas simultáneamente, creando una experiencia mágica y fascinante para niños y adultos por igual.\nCon su sistema de soplado de seis orificios y tres colores surtidos, esta máquina de burbujas será un éxito en cualquier reunión al aire libre. Prepárese para asombrarse mientras la máquina de burbujas a pilas llena el aire con una ráfaga de burbujas.\nEl sistema de soplado de seis orificios garantiza un flujo continuo de burbujas, cautivando a todos con su encantador despliegue.\nObserva cómo las burbujas flotan, brillan y bailan con la brisa, creando una cautivadora atmósfera de alegría y asombro."
   }
 ];

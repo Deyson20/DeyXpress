@@ -28,6 +28,7 @@ function loadCategories() {
     btn.className = "text-left px-4 py-2 rounded-lg font-semibold hover:bg-indigo-100 transition";
     btn.onclick = () => {
       currentCategory = cat;
+      showCatalog(); // Obliga a la web a volver a la vista principal
       renderProducts();
       toggleCategoriesMenu();
     };
@@ -38,6 +39,22 @@ function loadCategories() {
 function renderProducts(filterTerm = "") {
   grid.innerHTML = "";
   
+  // Capturamos los elementos del título
+  const titleEl = document.getElementById("categoryTitle");
+  const subtitleEl = document.getElementById("categorySubtitle");
+
+  // Actualizamos el texto según la categoría actual
+  if (titleEl && subtitleEl) {
+    if (currentCategory === "Todos") {
+      titleEl.textContent = "Todos los productos";
+      subtitleEl.textContent = "Explora nuestro catálogo completo";
+    } else {
+      titleEl.textContent = currentCategory;
+      subtitleEl.textContent = `Mostrando lo mejor en ${currentCategory.toLowerCase()}`;
+    }
+  }
+
+  // Filtrado de productos (esto ya lo tienes)
   const filtered = productos
     .filter(p => (currentCategory === "Todos" || p.category === currentCategory))
     .filter(p => p.name.toLowerCase().includes(filterTerm.toLowerCase()));
@@ -139,6 +156,7 @@ function showProductDetail(product) {
 
 function showCatalog() {
   productDetailView.classList.add("hidden");
+  window.scrollTo({ top: 0, behavior: 'smooth' }); // Sube la página al inicio automáticamente
   catalogView.classList.remove("hidden");
   const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
   window.history.pushState({ path: cleanUrl }, '', cleanUrl);
