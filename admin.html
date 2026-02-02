@@ -141,40 +141,34 @@
       });
     }
     
-    async function guardarProducto() {
-      // CORRECCIÓN: Usamos los IDs correctos que tienes en tu HTML (desc, imgs)
-      const idInput = document.getElementById('editIndex').value;
-      const id = idInput === "-1" ? Date.now() : parseInt(idInput);
-      
-      const nuevoProducto = {
-        id: id,
-        name: document.getElementById('name').value,
-        price: parseFloat(document.getElementById('price').value),
-        category: document.getElementById('category').value,
-        description: document.getElementById('desc').value, // Antes decía 'description'
-        images: document.getElementById('imgs').value.split('\n').filter(i => i.trim() !== ""), // Antes decía 'images'
-        video: document.getElementById('video').value,
-        variants: document.getElementById('variants').value.split(',').map(v => v.trim())
-      };
-      
-      try {
-        const response = await fetch(urlWorker, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(nuevoProducto)
-        });
-        
-        if (response.ok) {
-          alert("¡Producto guardado en la NUBE con éxito!");
-          location.reload();
-        } else {
-          alert("Error al guardar en el servidor");
-        }
-      } catch (error) {
-        console.error("Error al guardar:", error);
-        alert("No se pudo conectar con el servidor (Worker)");
-      }
-    }
+    function guardarProducto(e) {
+  e.preventDefault();
+
+  const nuevoProducto = {
+    id: editandoId || Date.now(),
+    name: document.getElementById('name').value,
+    price: parseFloat(document.getElementById('price').value),
+    category: document.getElementById('category').value,
+    description: document.getElementById('desc').value, // Asegúrate que el ID sea 'desc'
+    video: document.getElementById('video').value,
+    variants: document.getElementById('variants').value.split(',').map(v => v.trim()).filter(v => v !== ""),
+    images: document.getElementById('imgs').value.split('\n').map(img => img.trim()).filter(img => img !== "")
+  };
+
+  if (editandoId) {
+    const index = productos.findIndex(p => p.id === editandoId);
+    productos[index] = nuevoProducto;
+    editandoId = null;
+  } else {
+    productos.push(nuevoProducto);
+  }
+
+  renderAdminProducts();
+  limpiarFormulario();
+  alert("✅ Producto guardado en la lista temporal. ¡Recuerda descargar el archivo productos.js para aplicar los cambios!");
+}
+
+
     
     function cargarParaEditar(index) {
       const p = copiaProductos[index];
