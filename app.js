@@ -1,7 +1,7 @@
 let productos = []; // Empezamos con la lista vacía
 
 async function cargarProductosDesdeSQL() {
-  const urlWorker = "https://deyxpress.pages.dev/"; // <--- PEGA TU ENLACE AQUÍ
+  const urlWorker = "https://deyson20.workers.dev/api/productos"; // <--- PEGA TU ENLACE AQUÍ
   
   try {
     const response = await fetch(urlWorker);
