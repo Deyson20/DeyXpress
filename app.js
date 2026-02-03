@@ -48,12 +48,12 @@ function renderProducts(filterTerm = "") {
   
   const titleEl = document.getElementById("categoryTitle");
   const subtitleEl = document.getElementById("categorySubtitle");
-
+  
   if (titleEl && subtitleEl) {
     titleEl.textContent = currentCategory === "Todos" ? "Todos los productos" : currentCategory;
     subtitleEl.textContent = currentCategory === "Todos" ? "Explora nuestro catálogo completo" : `Lo mejor en ${currentCategory.toLowerCase()}`;
   }
-
+  
   const filtered = productos
     .filter(p => (currentCategory === "Todos" || p.category === currentCategory))
     .filter(p => p.name.toLowerCase().includes(filterTerm.toLowerCase()));
@@ -171,15 +171,15 @@ function updateCart() {
 }
 
 function changeQty(index, delta) {
-    // Delta es 1 para sumar y -1 para restar
-    cart[index].qty += delta;
-
-    // Si la cantidad llega a 0, eliminamos el producto del carrito
-    if (cart[index].qty <= 0) {
-        removeFromCart(index);
-    } else {
-        updateCart();
-    }
+  // Delta es 1 para sumar y -1 para restar
+  cart[index].qty += delta;
+  
+  // Si la cantidad llega a 0, eliminamos el producto del carrito
+  if (cart[index].qty <= 0) {
+    removeFromCart(index);
+  } else {
+    updateCart();
+  }
 }
 
 
@@ -189,6 +189,7 @@ function removeFromCart(index) {
 }
 
 function toggleCart() { cartSidebar.classList.toggle("translate-x-full"); }
+
 function toggleCategoriesMenu() { document.getElementById("categoriesMenu").classList.toggle("hidden"); }
 
 // 7. FORMULARIO DE PEDIDO
@@ -206,40 +207,89 @@ function closeOrderForm() {
   catalogView.classList.remove("hidden");
 }
 
-// 8. INICIALIZACIÓN (EL MOTOR)
+function compartirFormulario() {
+  // 1. Capturar datos del formulario
+  const datosEnvio = {
+    n: document.getElementById("nombre").value,
+    t: document.getElementById("telefono").value,
+    c: document.getElementById("ciudad").value,
+    d: document.getElementById("direccion").value,
+    r: document.getElementById("referencia").value,
+    h: document.getElementById("horario").value
+  };
+  
+  // 2. Capturar productos del carrito
+  const productosCarrito = cart.map(i => ({
+    id: i.id,
+    qty: i.qty,
+    v: i.selectedVariant || ""
+  }));
+  
+  // 3. Empaquetar todo en un solo objeto y codificarlo
+  const dataCompleta = { envio: datosEnvio, items: productosCarrito };
+  const encodedData = btoa(JSON.stringify(dataCompleta));
+  
+  const urlCompartir = `${window.location.origin}${window.location.pathname}?order=${encodedData}`;
+  
+  // 4. Ejecutar compartir
+  if (navigator.share) {
+    navigator.share({
+      title: 'Pedido DEYXPRESS listo',
+      text: 'He llenado los datos de mi pedido, solo falta enviarlo:',
+      url: urlCompartir,
+    });
+  } else {
+    navigator.clipboard.writeText(urlCompartir);
+    alert("¡Enlace de pedido completo copiado!");
+  }
+}
+
+
+// 8.   (EL MOTOR)
 document.addEventListener("DOMContentLoaded", () => {
   loadCategories();
   renderProducts();
   updateCart();
   
-   // --- INICIO: Lógica para leer carrito compartido ---
+// 8. INICIALIZACIÓN (EL MOTOR ACTUALIZADO)
+document.addEventListener("DOMContentLoaded", () => {
+  loadCategories();
+  renderProducts();
+  updateCart();
+  
   const urlParams = new URLSearchParams(window.location.search);
-  const cartData = urlParams.get('cart');
-
-  if (cartData) {
+  
+  // Lógica para leer PEDIDO COMPLETO (Formulario + Carrito)
+  const orderData = urlParams.get('order');
+  if (orderData) {
       try {
-          const decodedCart = JSON.parse(atob(cartData));
-          const newCart = decodedCart.map(itemUrl => {
-              const pBase = productos.find(p => p.id == itemUrl.id);
-              if (pBase) {
-                  return {
-                      ...pBase,
-                      qty: itemUrl.qty,
-                      selectedVariant: itemUrl.v
-                  };
-              }
-              return null;
-          }).filter(item => item !== null);
-
-          if (newCart.length > 0) {
-              cart = newCart;
-              updateCart();
-              alert("¡Hemos cargado los productos del carrito compartido!");
+          const decoded = JSON.parse(atob(orderData));
+          
+          // Llenar Formulario
+          if(decoded.envio) {
+              document.getElementById("nombre").value = decoded.envio.n || "";
+              document.getElementById("telefono").value = decoded.envio.t || "";
+              document.getElementById("ciudad").value = decoded.envio.c || "";
+              document.getElementById("direccion").value = decoded.envio.d || "";
+              document.getElementById("referencia").value = decoded.envio.r || "";
+              document.getElementById("horario").value = decoded.envio.h || "";
           }
-      } catch (e) {
-          console.error("Error al cargar carrito compartido", e);
-      }
+
+          // Llenar Carrito
+          if(decoded.items) {
+              cart = decoded.items.map(itemUrl => {
+                  const pBase = productos.find(p => p.id == itemUrl.id);
+                  return pBase ? { ...pBase, qty: itemUrl.qty, selectedVariant: itemUrl.v } : null;
+              }).filter(i => i !== null);
+              updateCart();
+          }
+          
+          confirmOrder(); // Abre automáticamente la vista del formulario
+          alert("¡Datos de envío y productos cargados correctamente!");
+      } catch (e) { console.error("Error al cargar pedido", e); }
   }
+});
+
   
   // Eventos de búsqueda
   if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
@@ -254,13 +304,13 @@ function toggleMobileSearch() {
 // Agrega esto al final de app.js para que el botón de buscar funcione
 function toggleMobileSearch() {
   const container = document.getElementById("mobileSearchContainer");
-  if(container) container.classList.toggle("hidden");
+  if (container) container.classList.toggle("hidden");
 }
 
 // MANEJO DEL ENVÍO DEL FORMULARIO A WHATSAPP
-document.getElementById("orderForm").addEventListener("submit", function (e) {
+document.getElementById("orderForm").addEventListener("submit", function(e) {
   e.preventDefault(); // Evita que la página se recargue
-
+  
   // 1. Datos del cliente
   const nombre = document.getElementById("nombre").value;
   const telefono = document.getElementById("telefono").value;
@@ -272,16 +322,16 @@ document.getElementById("orderForm").addEventListener("submit", function (e) {
   // 2. Días seleccionados
   const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
     .map(el => el.value).join(", ");
-
+  
   // 3. Resumen de productos
   let mensajeProductos = "";
   let totalPedido = 0;
-
+  
   cart.forEach(item => {
     mensajeProductos += `- ${item.name} ${item.selectedVariant ? `(${item.selectedVariant})` : ''} x${item.qty}\n`;
     totalPedido += item.price * item.qty;
   });
-
+  
   // 4. Configuración del mensaje
   const numeroWhatsApp = "573166093629"; // CAMBIA ESTO por tu número real (incluye código de país)
   
@@ -296,7 +346,7 @@ document.getElementById("orderForm").addEventListener("submit", function (e) {
     `*PRODUCTOS:*\n${mensajeProductos}\n` +
     `*TOTAL A PAGAR:* ${formatter.format(totalPedido)}\n\n` +
     `¡Espero mi pedido!`;
-
+  
   // 5. Abrir WhatsApp
   const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(texto)}`;
   window.open(url, "_blank");
@@ -306,35 +356,35 @@ document.getElementById("orderForm").addEventListener("submit", function (e) {
 
 // 1. Función para registrar un paso en el historial
 function registrarPaso(nombre) {
-    window.history.pushState({ view: nombre }, "");
+  window.history.pushState({ view: nombre }, "");
 }
 
 // 2. Lógica del botón atrás físico o gesto
 window.onpopstate = function(event) {
-    // A. Si el menú de CATEGORÍAS está abierto, cerrarlo
-    const categoriesMenu = document.getElementById("categoriesMenu");
-    if (categoriesMenu && !categoriesMenu.classList.contains("hidden")) {
-        toggleCategoriesMenu();
-        return; 
-    }
-
-    // B. Si el CARRITO está abierto, cerrarlo
-    if (!cartSidebar.classList.contains("translate-x-full")) {
-        toggleCart();
-        return;
-    }
-
-    // C. Si estamos en el DETALLE DE PRODUCTO, volver al catálogo
-    if (!productDetailView.classList.contains("hidden")) {
-        showCatalog();
-        return;
-    }
-
-    // D. Si estamos en el FORMULARIO DE PEDIDO, volver al catálogo
-    if (!orderFormView.classList.contains("hidden")) {
-        closeOrderForm();
-        return;
-    }
+  // A. Si el menú de CATEGORÍAS está abierto, cerrarlo
+  const categoriesMenu = document.getElementById("categoriesMenu");
+  if (categoriesMenu && !categoriesMenu.classList.contains("hidden")) {
+    toggleCategoriesMenu();
+    return;
+  }
+  
+  // B. Si el CARRITO está abierto, cerrarlo
+  if (!cartSidebar.classList.contains("translate-x-full")) {
+    toggleCart();
+    return;
+  }
+  
+  // C. Si estamos en el DETALLE DE PRODUCTO, volver al catálogo
+  if (!productDetailView.classList.contains("hidden")) {
+    showCatalog();
+    return;
+  }
+  
+  // D. Si estamos en el FORMULARIO DE PEDIDO, volver al catálogo
+  if (!orderFormView.classList.contains("hidden")) {
+    closeOrderForm();
+    return;
+  }
 };
 
 // 3. VINCULAR CON LAS FUNCIONES EXISTENTES
@@ -343,31 +393,31 @@ window.onpopstate = function(event) {
 // Para el Carrito
 const originalToggleCart = toggleCart;
 toggleCart = function() {
-    const abriendo = cartSidebar.classList.contains("translate-x-full");
-    originalToggleCart();
-    if (abriendo) registrarPaso("carrito");
+  const abriendo = cartSidebar.classList.contains("translate-x-full");
+  originalToggleCart();
+  if (abriendo) registrarPaso("carrito");
 };
 
 // Para el Menú de Categorías
 const originalToggleCategories = toggleCategoriesMenu;
 toggleCategoriesMenu = function() {
-    const menu = document.getElementById("categoriesMenu");
-    const abriendo = menu.classList.contains("hidden");
-    originalToggleCategories();
-    if (abriendo) registrarPaso("categorias");
+  const menu = document.getElementById("categoriesMenu");
+  const abriendo = menu.classList.contains("hidden");
+  originalToggleCategories();
+  if (abriendo) registrarPaso("categorias");
 };
 
 // Para el Detalle de Producto
 const originalShowProductDetail = showProductDetail;
 showProductDetail = function(product) {
-    originalShowProductDetail(product);
-    registrarPaso("detalle");
+  originalShowProductDetail(product);
+  registrarPaso("detalle");
 };
 
 // Para el Formulario de Pedido
 const originalConfirmOrder = confirmOrder;
 confirmOrder = function() {
-    if (!cart.length) return alert("Añade productos primero");
-    originalConfirmOrder();
-    registrarPaso("formulario");
+  if (!cart.length) return alert("Añade productos primero");
+  originalConfirmOrder();
+  registrarPaso("formulario");
 };

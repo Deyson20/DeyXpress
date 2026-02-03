@@ -1,332 +1,344 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="es">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DEYXPRESS - Pago Contraentrega</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEYXPRESS - Pago Contraentrega</title>
     
-    body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      background: #f1f5f9
-    }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    .no-scrollbar::-webkit-scrollbar {
-      display: none
-    }
-
-    /* ESTILOS ESPECÍFICOS DEL FORMULARIO */
-    .input-field {
-        border: 1.5px solid #e2e8f0;
-        transition: all 0.2s ease-in-out;
-        font-size: 16px;
-    }
-    .input-field:focus {
-        border-color: #4f46e5;
-        outline: none;
-        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-    }
-    .section-title {
-        color: #1e40af;
-        border-left: 4px solid #1e40af;
-        padding-left: 12px;
-        margin-bottom: 1.25rem;
-        font-weight: 700;
-        font-size: 1.1rem;
-    }
-    .day-chip input:checked + span {
-        background-color: #1e40af;
-        color: white;
-        border-color: #1e40af;
-    }
-    .choice-label {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        cursor: pointer;
-        padding: 8px 16px;
-        border-radius: 10px;
-        border: 1.5px solid #e2e8f0;
-        transition: all 0.2s;
-        font-size: 0.9rem;
-    }
-    .choice-label:has(input:checked) {
-        border-color: #1e40af;
-        background-color: #eff6ff;
-    }
-    .hidden-section { display: none; }
-  </style>
-  
-  <meta property="og:image" content="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #f1f5f9
+        }
+        
+        .no-scrollbar::-webkit-scrollbar {
+            display: none
+        }
+        
+        /* ESTILOS ESPECÍFICOS DEL FORMULARIO */
+        .input-field {
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s ease-in-out;
+            font-size: 16px;
+        }
+        
+        .input-field:focus {
+            border-color: #4f46e5;
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+        }
+        
+        .section-title {
+            color: #1e40af;
+            border-left: 4px solid #1e40af;
+            padding-left: 12px;
+            margin-bottom: 1.25rem;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+        
+        .day-chip input:checked+span {
+            background-color: #1e40af;
+            color: white;
+            border-color: #1e40af;
+        }
+        
+        .choice-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: 1.5px solid #e2e8f0;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        
+        .choice-label:has(input:checked) {
+            border-color: #1e40af;
+            background-color: #eff6ff;
+        }
+        
+        .hidden-section {
+            display: none;
+        }
+    </style>
+    
+    <meta property="og:image" content="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png">
 </head>
 
 <body class="text-slate-900">
     
     <div id="categoriesMenu" class="fixed inset-0 z-50 hidden">
-    <div class="absolute inset-0 bg-black/50" onclick="toggleCategoriesMenu()"></div>
-    <div class="absolute inset-y-0 left-0 w-64 bg-white shadow-xl p-6">
-        <div class="flex justify-between items-center mb-6">
-            <h2 class="font-black text-xl">Categorías</h2>
-            <button onclick="toggleCategoriesMenu()"><i class="fas fa-times"></i></button>
-        </div>
-        <div id="categoriesMenuList" class="flex flex-col gap-2">
+        <div class="absolute inset-0 bg-black/50" onclick="toggleCategoriesMenu()"></div>
+        <div class="absolute inset-y-0 left-0 w-64 bg-white shadow-xl p-6">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-black text-xl">Categorías</h2>
+                <button onclick="toggleCategoriesMenu()"><i class="fas fa-times"></i></button>
             </div>
-    </div>
-</div>
-
-  
-  <nav class="bg-white border-b sticky top-0 z-40">
-    <div class="container mx-auto px-4 py-3 flex items-center gap-3 justify-between">
-      
-      <button onclick="toggleCategoriesMenu()" class="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
-        <i class="fas fa-bars"></i>
-      </button>
-      
-      <div onclick="location.reload()" class="flex items-center cursor-pointer">
-        <img src="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png" alt="Logo DEYXPRESS" class="h-12 w-auto object-contain hover:scale-105 transition-transform">
-      </div>
-      
-      <div class="hidden sm:block relative w-full max-w-md">
-        <input id="searchInput" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500">
-        <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-      </div>
-      
-      <div class="flex gap-2">
-        <button onclick="toggleMobileSearch()" class="sm:hidden p-3 bg-slate-100 rounded-full">
-          <i class="fas fa-search"></i>
-        </button>
-        
-        <div id="mobileSearchContainer" class="hidden sm:hidden absolute top-full left-0 w-full bg-white p-4 shadow-md border-b">
-    <input id="searchInputMobile" type="text" placeholder="Buscar productos..." class="w-full pl-4 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500">
-</div>
-
-        
-        <button onclick="toggleCart()" class="relative p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
-          <i class="fas fa-shopping-cart"></i>
-          <span id="cartCounter" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
-        </button>
-      </div>
-    </div>
-  </nav>
-
-  <div class="bg-indigo-600 text-white py-2.5 shadow-md">
-    <div class="container mx-auto px-4 text-center text-sm font-bold flex items-center justify-center gap-3">
-      <i class="fas fa-truck-moving animate-bounce"></i> ¡PAGA AL RECIBIR EN CASA!
-    </div>
-  </div>
-  
-  <main class="container mx-auto px-4 py-8 min-h-screen">
-    <div id="catalogView">
-      <div class="mb-8 border-l-4 border-indigo-600 pl-4">
-        <h2 id="categoryTitle" class="text-3xl font-black text-slate-800 uppercase tracking-tighter">Todos los productos</h2>
-        <p id="categorySubtitle" class="text-indigo-600 text-xs font-bold uppercase tracking-widest mt-1">Explora nuestro catálogo completo</p>
-      </div>
-      <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
+            <div id="categoriesMenuList" class="flex flex-col gap-2">
+            </div>
+        </div>
     </div>
     
-    <div id="productDetailView" class="hidden animate-fade-in">
-      <button onclick="showCatalog()" class="mb-6 flex items-center gap-2 text-indigo-600 font-bold">
-        <i class="fas fa-arrow-left"></i> Volver al catálogo
-      </button>
-      <div id="detailContent"></div>
-    </div>
-
-    <div id="orderFormView" class="hidden max-w-2xl mx-auto">
-        <button onclick="closeOrderForm()" class="mb-6 flex items-center gap-2 text-slate-500 font-bold hover:text-indigo-600 transition">
-            <i class="fas fa-times"></i> Cancelar y volver
-        </button>
-        
-        <div class="text-center mb-8">
-            <h1 id="formProductTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-                Formulario de Pedido
-            </h1>
-            <p class="text-gray-600 mt-3 text-sm">Por favor, completa los datos para tu envío contraentrega.</p>
-        </div>
-
-        <div class="bg-white p-6 sm:p-10 rounded-[1.5rem] shadow-xl border border-slate-100">
-            <form id="orderForm" class="space-y-10">
-                <section>
-                    <h2 class="section-title">Datos Personales</h2>
-                    <div class="space-y-4">
-                        <input type="text" id="nombre" required placeholder="Nombre Completo *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="tel" id="telefono" required placeholder="Celular *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                            <input type="email" id="email" placeholder="Correo Electrónico (Opcional)" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                        </div>
-                    </div>
-                </section>
+    
+    <nav class="bg-white border-b sticky top-0 z-40">
+        <div class="container mx-auto px-4 py-3 flex items-center gap-3 justify-between">
+            
+            <button onclick="toggleCategoriesMenu()" class="p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+                <i class="fas fa-bars"></i>
+            </button>
+            
+            <div onclick="location.reload()" class="flex items-center cursor-pointer">
+                <img src="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png" alt="Logo DEYXPRESS" class="h-12 w-auto object-contain hover:scale-105 transition-transform">
+            </div>
+            
+            <div class="hidden sm:block relative w-full max-w-md">
+                <input id="searchInput" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            </div>
+            
+            <div class="flex gap-2">
+                <button onclick="toggleMobileSearch()" class="sm:hidden p-3 bg-slate-100 rounded-full">
+                    <i class="fas fa-search"></i>
+                </button>
                 
-                <section>
-                    <h2 class="section-title">Dirección de Envío</h2>
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="departamento" required placeholder="Departamento *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                            <input type="text" id="ciudad" required placeholder="Ciudad / Municipio *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                        </div>
-                        <input type="text" id="barrio" required placeholder="Barrio / Localidad *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                        <input type="text" id="direccion" required placeholder="Dirección Exacta (Calle, Carrera, Apto) *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                        <input type="text" id="referencia" required placeholder="Punto de Referencia (Color de casa, frente a... ) *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
-                    </div>
-                </section>
-                
-                <section>
-                    <h2 class="section-title">Detalles de Entrega</h2>
-                    <div class="space-y-6">
-                        <div>
-                            <span class="block text-sm font-semibold text-gray-700 mb-3">¿Lo recibirás tú u otra persona? *</span>
-                            <div class="flex flex-wrap gap-6">
-                                <label class="inline-flex items-center cursor-pointer group">
-                                    <input type="radio" name="quienRecibe" value="Yo" required onclick="toggleOtraPersona(false)" class="w-5 h-5 text-blue-600 border-gray-300">
-                                    <span class="ml-2 text-gray-700">Yo mismo</span>
-                                </label>
-                                <label class="inline-flex items-center cursor-pointer group">
-                                    <input type="radio" name="quienRecibe" value="Otra persona" onclick="toggleOtraPersona(true)" class="w-5 h-5 text-blue-600 border-gray-300">
-                                    <span class="ml-2 text-gray-700">Otra persona</span>
-                                </label>
-                            </div>
-                        </div>
-                        
-                        <div id="otraPersonaFields" class="hidden-section space-y-4 bg-blue-50 p-5 rounded-2xl border border-blue-100">
-                            <input type="text" id="nombreOtro" placeholder="Nombre de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
-                            <input type="tel" id="telOtro" placeholder="Celular de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-2">¿Cuenta con el efectivo completo? *</label>
-                            <select id="confirmacionEfectivo" required class="input-field w-full px-4 py-3 rounded-xl bg-gray-50">
-                                <option value="">Seleccione una opción...</option>
-                                <option value="SÍ, tengo el dinero completo">SÍ, tengo el dinero completo</option>
-                                <option value="SÍ, lo tendré listo">SÍ, lo tendré listo para la entrega</option>
-                            </select>
-                        </div>
-                        
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-3">¿Qué días estará en su domicilio? *</label>
-                            <div class="flex flex-wrap gap-2">
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Lunes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Lu</span></label>
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Martes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Ma</span></label>
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Miércoles" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Mi</span></label>
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Jueves" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Ju</span></label>
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Viernes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Vi</span></label>
-                                <label class="day-chip"><input type="checkbox" name="dias" value="Sábado" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Sa</span></label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Horario sugerido de entrega *</label>
-                            <input type="text" id="horario" required placeholder="Ej: Mañana 8am-12pm / Tarde 2pm-6pm" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50">
-                        </div>
-                    </div>
-                </section>
-                
-                <section class="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
-                    <h2 class="section-title">Compromiso</h2>
-                    <div class="space-y-4">
-                        <p class="text-sm font-semibold text-gray-700">¿Estás de acuerdo en estar pendiente del celular los próximos 3-7 días? *</p>
-                        <div class="flex gap-4">
-                            <label class="choice-label"><input type="radio" name="p2" value="SÍ" required><span>SÍ</span></label>
-                            <label class="choice-label"><input type="radio" name="p2" value="NO"><span>NO</span></label>
-                        </div>
-                        <p class="text-sm font-semibold text-gray-700">¿Entiendes que una devolución genera pérdidas de envío? *</p>
-                        <div class="flex gap-4">
-                            <label class="choice-label"><input type="radio" name="p3" value="SÍ" required><span>SÍ</span></label>
-                            <label class="choice-label"><input type="radio" name="p3" value="NO"><span>NO</span></label>
-                        </div>
-                    </div>
-                </section>
-                
-                <div class="pt-4">
-                    <button type="submit" class="bg-[#25d366] hover:bg-[#128c7e] w-full py-5 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
-                        <i class="fab fa-whatsapp text-2xl"></i> CONFIRMAR Y ENVIAR PEDIDO
-                    </button>
+                <div id="mobileSearchContainer" class="hidden sm:hidden absolute top-full left-0 w-full bg-white p-4 shadow-md border-b">
+                    <input id="searchInputMobile" type="text" placeholder="Buscar productos..." class="w-full pl-4 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500">
                 </div>
-            </form>
+                
+                
+                <button onclick="toggleCart()" class="relative p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span id="cartCounter" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="bg-indigo-600 text-white py-2.5 shadow-md">
+        <div class="container mx-auto px-4 text-center text-sm font-bold flex items-center justify-center gap-3">
+            <i class="fas fa-truck-moving animate-bounce"></i> ¡PAGA AL RECIBIR EN CASA!
         </div>
     </div>
-  </main>
-  
-<footer class="bg-white border-t mt-12 pt-12 pb-8">
-    <div class="container mx-auto px-4">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-8">
-            <div class="space-y-4">
-                <img src="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png" alt="Logo DEYXPRESS" class="h-10 w-auto opacity-80 grayscale hover:grayscale-0 transition-all">
-                <p class="text-slate-500 text-sm leading-relaxed">
-                    Tu tienda de confianza con envíos a todo el país y pago contraentrega. Calidad y seguridad en cada pedido.
-                </p>
+    
+    <main class="container mx-auto px-4 py-8 min-h-screen">
+        <div id="catalogView">
+            <div class="mb-8 border-l-4 border-indigo-600 pl-4">
+                <h2 id="categoryTitle" class="text-3xl font-black text-slate-800 uppercase tracking-tighter">Todos los productos</h2>
+                <p id="categorySubtitle" class="text-indigo-600 text-xs font-bold uppercase tracking-widest mt-1">Explora nuestro catálogo completo</p>
             </div>
-
-            <div class="space-y-4">
-                <h4 class="font-black text-slate-800 uppercase tracking-tighter text-sm">¿Por qué elegirnos?</h4>
-                <ul class="text-slate-500 text-sm space-y-3">
-                    <li class="flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-500"></i> Pago al recibir en casa
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-500"></i> Revisión de productos
-                    </li>
-                    <li class="flex items-center gap-2">
-                        <i class="fas fa-check-circle text-green-500"></i> Soporte por WhatsApp
-                    </li>
-                </ul>
+            <div id="productGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
+        </div>
+        
+        <div id="productDetailView" class="hidden animate-fade-in">
+            <button onclick="showCatalog()" class="mb-6 flex items-center gap-2 text-indigo-600 font-bold">
+                <i class="fas fa-arrow-left"></i> Volver al catálogo
+            </button>
+            <div id="detailContent"></div>
+        </div>
+        
+        <div id="orderFormView" class="hidden max-w-2xl mx-auto">
+            <button onclick="closeOrderForm()" class="mb-6 flex items-center gap-2 text-slate-500 font-bold hover:text-indigo-600 transition">
+                <i class="fas fa-times"></i> Cancelar y volver
+            </button>
+            
+            <div class="text-center mb-8">
+                <h1 id="formProductTitle" class="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
+                    Formulario de Pedido
+                </h1>
+                <p class="text-gray-600 mt-3 text-sm">Por favor, completa los datos para tu envío contraentrega.</p>
             </div>
-
-            <div class="space-y-4">
-                <h4 class="font-black text-slate-800 uppercase tracking-tighter text-sm">Atención al Cliente</h4>
-                <div class="flex flex-col gap-3">
-                    <a href="https://wa.me/573166093629" target="_blank" class="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition text-sm">
-                        <i class="fab fa-whatsapp text-lg text-[#25d366]"></i> Chatea con nosotros
-                    </a>
-                    <p class="text-slate-500 text-sm flex items-center gap-2">
-                        <i class="fas fa-clock text-indigo-400"></i> Lunes a Sábado: 8am - 6pm
+            
+            <div class="bg-white p-6 sm:p-10 rounded-[1.5rem] shadow-xl border border-slate-100">
+                <form id="orderForm" class="space-y-10">
+                    <section>
+                        <h2 class="section-title">Datos Personales</h2>
+                        <div class="space-y-4">
+                            <input type="text" id="nombre" required placeholder="Nombre Completo *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="tel" id="telefono" required placeholder="Celular *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                                <input type="email" id="email" placeholder="Correo Electrónico (Opcional)" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h2 class="section-title">Dirección de Envío</h2>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <input type="text" id="departamento" required placeholder="Departamento *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                                <input type="text" id="ciudad" required placeholder="Ciudad / Municipio *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                            </div>
+                            <input type="text" id="barrio" required placeholder="Barrio / Localidad *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                            <input type="text" id="direccion" required placeholder="Dirección Exacta (Calle, Carrera, Apto) *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                            <input type="text" id="referencia" required placeholder="Punto de Referencia (Color de casa, frente a... ) *" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50 focus:bg-white">
+                        </div>
+                    </section>
+                    
+                    <section>
+                        <h2 class="section-title">Detalles de Entrega</h2>
+                        <div class="space-y-6">
+                            <div>
+                                <span class="block text-sm font-semibold text-gray-700 mb-3">¿Lo recibirás tú u otra persona? *</span>
+                                <div class="flex flex-wrap gap-6">
+                                    <label class="inline-flex items-center cursor-pointer group">
+                                        <input type="radio" name="quienRecibe" value="Yo" required onclick="toggleOtraPersona(false)" class="w-5 h-5 text-blue-600 border-gray-300">
+                                        <span class="ml-2 text-gray-700">Yo mismo</span>
+                                    </label>
+                                    <label class="inline-flex items-center cursor-pointer group">
+                                        <input type="radio" name="quienRecibe" value="Otra persona" onclick="toggleOtraPersona(true)" class="w-5 h-5 text-blue-600 border-gray-300">
+                                        <span class="ml-2 text-gray-700">Otra persona</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="otraPersonaFields" class="hidden-section space-y-4 bg-blue-50 p-5 rounded-2xl border border-blue-100">
+                                <input type="text" id="nombreOtro" placeholder="Nombre de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
+                                <input type="tel" id="telOtro" placeholder="Celular de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">¿Cuenta con el efectivo completo? *</label>
+                                <select id="confirmacionEfectivo" required class="input-field w-full px-4 py-3 rounded-xl bg-gray-50">
+                                    <option value="">Seleccione una opción...</option>
+                                    <option value="SÍ, tengo el dinero completo">SÍ, tengo el dinero completo</option>
+                                    <option value="SÍ, lo tendré listo">SÍ, lo tendré listo para la entrega</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-3">¿Qué días estará en su domicilio? *</label>
+                                <div class="flex flex-wrap gap-2">
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Lunes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Lu</span></label>
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Martes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Ma</span></label>
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Miércoles" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Mi</span></label>
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Jueves" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Ju</span></label>
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Viernes" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Vi</span></label>
+                                    <label class="day-chip"><input type="checkbox" name="dias" value="Sábado" class="hidden"><span class="px-4 py-2 border border-gray-300 rounded-full text-sm font-medium block">Sa</span></label>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Horario sugerido de entrega *</label>
+                                <input type="text" id="horario" required placeholder="Ej: Mañana 8am-12pm / Tarde 2pm-6pm" class="input-field w-full px-4 py-3 rounded-xl bg-gray-50">
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <section class="bg-blue-50/50 p-6 rounded-3xl border border-blue-100">
+                        <h2 class="section-title">Compromiso</h2>
+                        <div class="space-y-4">
+                            <p class="text-sm font-semibold text-gray-700">¿Estás de acuerdo en estar pendiente del celular los próximos 3-7 días? *</p>
+                            <div class="flex gap-4">
+                                <label class="choice-label"><input type="radio" name="p2" value="SÍ" required><span>SÍ</span></label>
+                                <label class="choice-label"><input type="radio" name="p2" value="NO"><span>NO</span></label>
+                            </div>
+                            <p class="text-sm font-semibold text-gray-700">¿Entiendes que una devolución genera pérdidas de envío? *</p>
+                            <div class="flex gap-4">
+                                <label class="choice-label"><input type="radio" name="p3" value="SÍ" required><span>SÍ</span></label>
+                                <label class="choice-label"><input type="radio" name="p3" value="NO"><span>NO</span></label>
+                            </div>
+                        </div>
+                    </section>
+                    
+                    <div class="pt-4">
+                        <button type="button" onclick="compartirFormulario()" class="w-full py-3 rounded-2xl border-2 border-slate-300 text-slate-600 font-bold flex items-center justify-center gap-2 hover:bg-slate-100 transition-all">
+                            <i class="fas fa-share-nodes"></i> COMPARTIR DATOS DE ENVÍO
+                        </button>
+                        <button type="submit" class="bg-[#25d366] hover:bg-[#128c7e] w-full py-5 rounded-2xl text-white font-bold text-lg flex items-center justify-center gap-3 shadow-xl transition-all">
+                            <i class="fab fa-whatsapp text-2xl"></i> CONFIRMAR Y ENVIAR PEDIDO
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+    
+    <footer class="bg-white border-t mt-12 pt-12 pb-8">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-10 mb-8">
+                <div class="space-y-4">
+                    <img src="https://i.postimg.cc/L5CWzNMM/IMG_20260123_134510.png" alt="Logo DEYXPRESS" class="h-10 w-auto opacity-80 grayscale hover:grayscale-0 transition-all">
+                    <p class="text-slate-500 text-sm leading-relaxed">
+                        Tu tienda de confianza con envíos a todo el país y pago contraentrega. Calidad y seguridad en cada pedido.
                     </p>
                 </div>
+                
+                <div class="space-y-4">
+                    <h4 class="font-black text-slate-800 uppercase tracking-tighter text-sm">¿Por qué elegirnos?</h4>
+                    <ul class="text-slate-500 text-sm space-y-3">
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i> Pago al recibir en casa
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i> Revisión de productos
+                        </li>
+                        <li class="flex items-center gap-2">
+                            <i class="fas fa-check-circle text-green-500"></i> Soporte por WhatsApp
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="space-y-4">
+                    <h4 class="font-black text-slate-800 uppercase tracking-tighter text-sm">Atención al Cliente</h4>
+                    <div class="flex flex-col gap-3">
+                        <a href="https://wa.me/573166093629" target="_blank" class="inline-flex items-center gap-2 text-slate-500 hover:text-indigo-600 transition text-sm">
+                            <i class="fab fa-whatsapp text-lg text-[#25d366]"></i> Chatea con nosotros
+                        </a>
+                        <p class="text-slate-500 text-sm flex items-center gap-2">
+                            <i class="fas fa-clock text-indigo-400"></i> Lunes a Sábado: 8am - 6pm
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t pt-8 text-center">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
+                    &copy; 2024 DEYXPRESS - Todos los derechos reservados
+                </p>
             </div>
         </div>
-
-        <div class="border-t pt-8 text-center">
-            <p class="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
-                &copy; 2024 DEYXPRESS - Todos los derechos reservados
-            </p>
+    </footer>
+    
+    
+    <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="font-black text-xl">Tu Pedido</h2>
+                <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div id="cartItems" class="flex-1 overflow-y-auto space-y-4"></div>
+            
+            <div class="border-t pt-4">
+                <div class="flex justify-between font-black text-xl mb-4">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0</span>
+                </div>
+                
+                <button onclick="compartirCarrito()" class="w-full py-3 rounded-xl border-2 border-indigo-600 text-indigo-600 font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all">
+                    <i class="fas fa-share-alt"></i> COMPARTIR CARRITO
+                </button>
+                
+                <button onclick="confirmOrder()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">
+                    CONFIRMAR PEDIDO
+                </button>
+                
+            </div>
         </div>
     </div>
-</footer>
-
-
-<div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform">
-  <div class="p-6 h-full flex flex-col">
-    <div class="flex justify-between items-center mb-6">
-      <h2 class="font-black text-xl">Tu Pedido</h2>
-      <button onclick="toggleCart()"><i class="fas fa-times"></i></button>
-    </div>
     
-    <div id="cartItems" class="flex-1 overflow-y-auto space-y-4"></div>
     
-    <div class="border-t pt-4">
-      <div class="flex justify-between font-black text-xl mb-4">
-        <span>Total:</span>
-        <span id="cartTotal">$0</span>
-      </div>
-      
-      <button onclick="compartirCarrito()" class="w-full py-3 rounded-xl border-2 border-indigo-600 text-indigo-600 font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all">
-        <i class="fas fa-share-alt"></i> COMPARTIR CARRITO
-    </button>
-      
-      <button onclick="confirmOrder()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">
-        CONFIRMAR PEDIDO
-      </button>
-      
-    </div>
-  </div>
-</div>
-
-
-  <script src="productos.js"></script>
-  <script src="app.js"></script>
+    <script src="productos.js"></script>
+    <script src="app.js"></script>
 </body>
+
 </html>
