@@ -100,13 +100,24 @@ function showProductDetail(product) {
         <div class="text-slate-500 mt-4 text-sm leading-relaxed">${desc}</div>
         ${variantsHTML}
         <p class="text-indigo-600 text-3xl font-black my-6">${formatter.format(product.price)}</p>
-        <div class="flex gap-3">
-            <input id="detailQty" type="number" min="1" value="1" class="w-20 text-center border rounded-xl font-bold text-lg">
-            <button onclick="addToCartFromDetail()" class="flex-1 bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition">Añadir al Pedido</button>
+        
+        <div class="space-y-3">
+            <div class="flex gap-3">
+                <input id="detailQty" type="number" min="1" value="1" class="w-20 text-center border rounded-xl font-bold text-lg">
+                <button onclick="addToCartFromDetail()" class="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-50 transition">Añadir al Pedido</button>
+            </div>
+            
+            <button onclick="comprarDirectoDesdeDetail()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                <i class="fas fa-bolt"></i> COMPRAR AHORA
+            </button>
+            <button onclick="compartirProductoIndividual()" class="w-full py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition">
+                <i class="fas fa-share-alt"></i> Compartir este producto
+            </button>
         </div>
       </div>
     </div>`;
 }
+
 
 function showCatalog() {
   productDetailView.classList.add("hidden");
@@ -249,8 +260,18 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCart();
   
   const urlParams = new URLSearchParams(window.location.search);
+
+  // --- NUEVA LÓGICA PARA ABRIR PRODUCTO POR ENLACE (PID) ---
+  const productId = urlParams.get('pid');
+  if (productId) {
+      const prod = productos.find(p => p.id == productId);
+      if (prod) {
+          showProductDetail(prod);
+      }
+  }
+  // -------------------------------------------------------
+
   const orderData = urlParams.get('order');
-  
   if (orderData) {
     try {
       const decoded = JSON.parse(atob(orderData));
@@ -276,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
   if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
 });
+
 
 function toggleMobileSearch() {
   const container = document.getElementById("mobileSearchContainer");
@@ -370,4 +392,40 @@ function toggleOtraPersona(show) {
     document.getElementById('nombreOtro').required = false;
     document.getElementById('telOtro').required = false;
   }
+}
+
+function comprarDirectoDesdeDetail() {
+    if (!currentProduct) return;
+
+    const qty = parseInt(document.getElementById("detailQty").value) || 1;
+    const variantInput = document.getElementById("variantSelect");
+    const selectedVariant = variantInput ? variantInput.value : null;
+
+    // Seteamos el carrito solo con este producto, cantidad y variante elegida
+    cart = [{ 
+        ...currentProduct, 
+        qty: qty, 
+        selectedVariant: selectedVariant 
+    }];
+    
+    updateCart();
+    confirmOrder(); // Envía directamente a la vista del formulario
+}
+
+function compartirProductoIndividual() {
+    if (!currentProduct) return;
+
+    // Generamos una URL que incluya el ID del producto
+    const urlCompartir = `${window.location.origin}${window.location.pathname}?pid=${currentProduct.id}`;
+
+    if (navigator.share) {
+        navigator.share({
+            title: currentProduct.name,
+            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+            url: urlCompartir,
+        }).catch(console.error);
+    } else {
+        navigator.clipboard.writeText(urlCompartir);
+        alert("¡Enlace del producto copiado al portapapeles!");
+    }
 }
