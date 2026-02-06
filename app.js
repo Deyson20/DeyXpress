@@ -125,6 +125,7 @@ function showProductDetail(product) {
 
 
 function showCatalog() {
+  document.title = "DEYXPRESS - Pago Contraentrega";
   productDetailView.classList.add("hidden");
   orderFormView.classList.add("hidden");
   catalogView.classList.remove("hidden");
@@ -153,7 +154,8 @@ function updateCart() {
   if (!cartItems) return;
   
   cartItems.innerHTML = "";
-  let total = 0, count = 0;
+  let total = 0,
+    count = 0;
   
   cart.forEach((item, index) => {
     total += item.price * item.qty;
@@ -202,6 +204,7 @@ function removeFromCart(index) {
 }
 
 function toggleCart() { cartSidebar.classList.toggle("translate-x-full"); }
+
 function toggleCategoriesMenu() { document.getElementById("categoriesMenu").classList.toggle("hidden"); }
 
 // 7. FORMULARIO DE PEDIDO
@@ -220,12 +223,12 @@ function closeOrderForm() {
 }
 
 function comprarDirecto(productId) {
-    const p = productos.find(item => item.id === productId);
-    if (!p) return;
-    // Limpiamos el carrito para compra única
-    cart = [{ ...p, qty: 1, selectedVariant: p.variants && p.variants.length > 0 ? p.variants[0] : null }];
-    updateCart();
-    confirmOrder();
+  const p = productos.find(item => item.id === productId);
+  if (!p) return;
+  // Limpiamos el carrito para compra única
+  cart = [{ ...p, qty: 1, selectedVariant: p.variants && p.variants.length > 0 ? p.variants[0] : null }];
+  updateCart();
+  confirmOrder();
 }
 
 function compartirFormulario() {
@@ -265,17 +268,17 @@ document.addEventListener("DOMContentLoaded", () => {
   updateCart();
   
   const urlParams = new URLSearchParams(window.location.search);
-
+  
   // --- NUEVA LÓGICA PARA ABRIR PRODUCTO POR ENLACE (PID) ---
   const productId = urlParams.get('pid');
   if (productId) {
-      const prod = productos.find(p => p.id == productId);
-      if (prod) {
-          showProductDetail(prod);
-      }
+    const prod = productos.find(p => p.id == productId);
+    if (prod) {
+      showProductDetail(prod);
+    }
   }
   // -------------------------------------------------------
-
+  
   const orderData = urlParams.get('order');
   if (orderData) {
     try {
@@ -400,37 +403,37 @@ function toggleOtraPersona(show) {
 }
 
 function comprarDirectoDesdeDetail() {
-    if (!currentProduct) return;
-
-    const qty = parseInt(document.getElementById("detailQty").value) || 1;
-    const variantInput = document.getElementById("variantSelect");
-    const selectedVariant = variantInput ? variantInput.value : null;
-
-    // Seteamos el carrito solo con este producto, cantidad y variante elegida
-    cart = [{ 
-        ...currentProduct, 
-        qty: qty, 
-        selectedVariant: selectedVariant 
-    }];
-    
-    updateCart();
-    confirmOrder(); // Envía directamente a la vista del formulario
+  if (!currentProduct) return;
+  
+  const qty = parseInt(document.getElementById("detailQty").value) || 1;
+  const variantInput = document.getElementById("variantSelect");
+  const selectedVariant = variantInput ? variantInput.value : null;
+  
+  // Seteamos el carrito solo con este producto, cantidad y variante elegida
+  cart = [{
+    ...currentProduct,
+    qty: qty,
+    selectedVariant: selectedVariant
+  }];
+  
+  updateCart();
+  confirmOrder(); // Envía directamente a la vista del formulario
 }
 
 function compartirProductoIndividual() {
-    if (!currentProduct) return;
-
-    // Generamos una URL que incluya el ID del producto
-    const urlCompartir = `${window.location.origin}${window.location.pathname}?pid=${currentProduct.id}`;
-
-    if (navigator.share) {
-        navigator.share({
-            title: currentProduct.name,
-            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
-            url: urlCompartir,
-        }).catch(console.error);
-    } else {
-        navigator.clipboard.writeText(urlCompartir);
-        alert("¡Enlace del producto copiado al portapapeles!");
-    }
+  if (!currentProduct) return;
+  
+  // Generamos una URL que incluya el ID del producto
+  const urlCompartir = `${window.location.origin}${window.location.pathname}?pid=${currentProduct.id}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: currentProduct.name,
+      text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+      url: urlCompartir,
+    }).catch(console.error);
+  } else {
+    navigator.clipboard.writeText(urlCompartir);
+    alert("¡Enlace del producto copiado al portapapeles!");
+  }
 }
