@@ -70,7 +70,10 @@ function renderProducts(filterTerm = "") {
       <img src="${p.images[0]}" class="h-40 w-full object-contain mb-3" alt="${p.name}">
       <h3 class="font-bold text-sm h-10 line-clamp-2">${p.name}</h3>
       <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
-      <button class="mt-3 bg-indigo-600 text-white py-2 w-full rounded-xl font-bold">Ver producto</button>
+      
+      <button onclick="event.stopPropagation(); showProductDetail(${JSON.stringify(p).replace(/"/g, '&quot;')})" class="mt-3 border border-indigo-600 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs mb-2">Ver Detalle</button>
+      
+      <button onclick="event.stopPropagation(); comprarDirecto(${p.id})" class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md shadow-indigo-100">Comprar Directo</button>
     `;
     div.onclick = () => showProductDetail(p);
     grid.appendChild(div);
@@ -134,8 +137,7 @@ function updateCart() {
   if (!cartItems) return;
   
   cartItems.innerHTML = "";
-  let total = 0,
-    count = 0;
+  let total = 0, count = 0;
   
   cart.forEach((item, index) => {
     total += item.price * item.qty;
@@ -150,7 +152,6 @@ function updateCart() {
         </div>
         <button onclick="removeFromCart(${index})" class="text-red-400 hover:text-red-600 pl-2"><i class="fas fa-trash-alt text-xs"></i></button>
       </div>
-      
       <div class="flex justify-between items-center bg-slate-50 rounded-lg p-1">
         <div class="flex items-center gap-3">
           <button onclick="changeQty(${index}, -1)" class="w-7 h-7 flex items-center justify-center bg-white border rounded-md shadow-sm active:scale-90 transition-transform">
@@ -171,10 +172,7 @@ function updateCart() {
 }
 
 function changeQty(index, delta) {
-  // Delta es 1 para sumar y -1 para restar
   cart[index].qty += delta;
-  
-  // Si la cantidad llega a 0, eliminamos el producto del carrito
   if (cart[index].qty <= 0) {
     removeFromCart(index);
   } else {
@@ -182,14 +180,12 @@ function changeQty(index, delta) {
   }
 }
 
-
 function removeFromCart(index) {
   cart.splice(index, 1);
   updateCart();
 }
 
 function toggleCart() { cartSidebar.classList.toggle("translate-x-full"); }
-
 function toggleCategoriesMenu() { document.getElementById("categoriesMenu").classList.toggle("hidden"); }
 
 // 7. FORMULARIO DE PEDIDO
@@ -207,8 +203,16 @@ function closeOrderForm() {
   catalogView.classList.remove("hidden");
 }
 
+function comprarDirecto(productId) {
+    const p = productos.find(item => item.id === productId);
+    if (!p) return;
+    // Limpiamos el carrito para compra única
+    cart = [{ ...p, qty: 1, selectedVariant: p.variants && p.variants.length > 0 ? p.variants[0] : null }];
+    updateCart();
+    confirmOrder();
+}
+
 function compartirFormulario() {
-  // 1. Capturar datos del formulario
   const datosEnvio = {
     n: document.getElementById("nombre").value,
     t: document.getElementById("telefono").value,
@@ -218,100 +222,70 @@ function compartirFormulario() {
     h: document.getElementById("horario").value
   };
   
-  // 2. Capturar productos del carrito
-  const productosCarrito = cart.map(i => ({
-    id: i.id,
-    qty: i.qty,
-    v: i.selectedVariant || ""
-  }));
-  
-  // 3. Empaquetar todo en un solo objeto y codificarlo
+  const productosCarrito = cart.map(i => ({ id: i.id, qty: i.qty, v: i.selectedVariant || "" }));
   const dataCompleta = { envio: datosEnvio, items: productosCarrito };
   const encodedData = btoa(JSON.stringify(dataCompleta));
   
-  const urlCompartir = `${window.location.origin}${window.location.pathname}?order=${encodedData}`;
+  // URL con ID de producto si es solo uno
+  const productIdSuffix = cart.length === 1 ? `&pid=${cart[0].id}` : '';
+  const urlCompartir = `${window.location.origin}${window.location.pathname}?order=${encodedData}${productIdSuffix}`;
   
-  // 4. Ejecutar compartir
   if (navigator.share) {
     navigator.share({
-      title: 'Pedido DEYXPRESS listo',
+      title: `Pedido Deyxpress: ${cart.length === 1 ? cart[0].name : 'Mi Pedido'}`,
       text: 'He llenado los datos de mi pedido, solo falta enviarlo:',
       url: urlCompartir,
     });
   } else {
     navigator.clipboard.writeText(urlCompartir);
-    alert("¡Enlace de pedido completo copiado!");
+    alert("¡Enlace de pedido copiado!");
   }
 }
 
-
-// 8.   (EL MOTOR)
-document.addEventListener("DOMContentLoaded", () => {
-  loadCategories();
-  renderProducts();
-  updateCart();
-  
-// 8. INICIALIZACIÓN (EL MOTOR ACTUALIZADO)
+// 8. MOTOR DE INICIALIZACIÓN
 document.addEventListener("DOMContentLoaded", () => {
   loadCategories();
   renderProducts();
   updateCart();
   
   const urlParams = new URLSearchParams(window.location.search);
-  
-  // Lógica para leer PEDIDO COMPLETO (Formulario + Carrito)
   const orderData = urlParams.get('order');
-  if (orderData) {
-      try {
-          const decoded = JSON.parse(atob(orderData));
-          
-          // Llenar Formulario
-          if(decoded.envio) {
-              document.getElementById("nombre").value = decoded.envio.n || "";
-              document.getElementById("telefono").value = decoded.envio.t || "";
-              document.getElementById("ciudad").value = decoded.envio.c || "";
-              document.getElementById("direccion").value = decoded.envio.d || "";
-              document.getElementById("referencia").value = decoded.envio.r || "";
-              document.getElementById("horario").value = decoded.envio.h || "";
-          }
-
-          // Llenar Carrito
-          if(decoded.items) {
-              cart = decoded.items.map(itemUrl => {
-                  const pBase = productos.find(p => p.id == itemUrl.id);
-                  return pBase ? { ...pBase, qty: itemUrl.qty, selectedVariant: itemUrl.v } : null;
-              }).filter(i => i !== null);
-              updateCart();
-          }
-          
-          confirmOrder(); // Abre automáticamente la vista del formulario
-          alert("¡Datos de envío y productos cargados correctamente!");
-      } catch (e) { console.error("Error al cargar pedido", e); }
-  }
-});
-
   
-  // Eventos de búsqueda
+  if (orderData) {
+    try {
+      const decoded = JSON.parse(atob(orderData));
+      if (decoded.envio) {
+        document.getElementById("nombre").value = decoded.envio.n || "";
+        document.getElementById("telefono").value = decoded.envio.t || "";
+        document.getElementById("ciudad").value = decoded.envio.c || "";
+        document.getElementById("direccion").value = decoded.envio.d || "";
+        document.getElementById("referencia").value = decoded.envio.r || "";
+        document.getElementById("horario").value = decoded.envio.h || "";
+      }
+      if (decoded.items) {
+        cart = decoded.items.map(itemUrl => {
+          const pBase = productos.find(p => p.id == itemUrl.id);
+          return pBase ? { ...pBase, qty: itemUrl.qty, selectedVariant: itemUrl.v } : null;
+        }).filter(i => i !== null);
+        updateCart();
+      }
+      confirmOrder();
+    } catch (e) { console.error("Error al cargar pedido", e); }
+  }
+  
   if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
   if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
 });
 
 function toggleMobileSearch() {
-  const searchBar = document.getElementById("searchInputMobile");
-  searchBar.classList.toggle("hidden");
-}
-
-// Agrega esto al final de app.js para que el botón de buscar funcione
-function toggleMobileSearch() {
   const container = document.getElementById("mobileSearchContainer");
   if (container) container.classList.toggle("hidden");
 }
 
-// MANEJO DEL ENVÍO DEL FORMULARIO A WHATSAPP
+// ENVÍO A WHATSAPP
 document.getElementById("orderForm").addEventListener("submit", function(e) {
-  e.preventDefault(); // Evita que la página se recargue
+  e.preventDefault();
   
-  // 1. Datos del cliente
   const nombre = document.getElementById("nombre").value;
   const telefono = document.getElementById("telefono").value;
   const ciudad = document.getElementById("ciudad").value;
@@ -319,78 +293,50 @@ document.getElementById("orderForm").addEventListener("submit", function(e) {
   const referencia = document.getElementById("referencia").value;
   const horario = document.getElementById("horario").value;
   
-  // 2. Días seleccionados
-  const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
-    .map(el => el.value).join(", ");
+  const efectivo = document.getElementById("confirmacionEfectivo").value;
+  const pendienteCelular = document.querySelector('input[name="p2"]:checked')?.value || "No marcado";
+  const entiendeDevolucion = document.querySelector('input[name="p3"]:checked')?.value || "No marcado";
   
-  // 3. Resumen de productos
+  const quienRecibeRadio = document.querySelector('input[name="quienRecibe"]:checked').value;
+  let mensajeExtraDestinatario = "";
+  
+  if (quienRecibeRadio === "Otra persona") {
+    const nombreOtro = document.getElementById("nombreOtro").value;
+    const telOtro = document.getElementById("telOtro").value;
+    const emailOtro = document.getElementById("emailOtro")?.value || "No proporcionado";
+    mensajeExtraDestinatario = `\n🎁 *DATOS DE QUIEN RECIBE:* \n👤 Nombre: ${nombreOtro}\n📞 Celular: ${telOtro}\n📧 Correo: ${emailOtro}\n`;
+  }
+  
+  const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked')).map(el => el.value).join(", ");
+  
   let mensajeProductos = "";
   let totalPedido = 0;
-  
   cart.forEach(item => {
     mensajeProductos += `- ${item.name} ${item.selectedVariant ? `(${item.selectedVariant})` : ''} x${item.qty}\n`;
     totalPedido += item.price * item.qty;
   });
   
-  // 4. Configuración del mensaje
-  const numeroWhatsApp = "573166093629"; // CAMBIA ESTO por tu número real (incluye código de país)
-  
   const texto = `*NUEVO PEDIDO - DEYXPRESS*\n\n` +
-    `*Cliente:* ${nombre}\n` +
-    `*Celular:* ${telefono}\n` +
-    `*Ciudad:* ${ciudad}\n` +
-    `*Dirección:* ${direccion}\n` +
-    `*Referencia:* ${referencia}\n` +
-    `*Días entrega:* ${dias}\n` +
-    `*Horario:* ${horario}\n\n` +
-    `*PRODUCTOS:*\n${mensajeProductos}\n` +
-    `*TOTAL A PAGAR:* ${formatter.format(totalPedido)}\n\n` +
-    `¡Espero mi pedido!`;
+    `*Cliente:* ${nombre}\n*Celular:* ${telefono}\n*Ciudad:* ${ciudad}\n*Dirección:* ${direccion}\n*Referencia:* ${referencia}\n*Entrega:* ${quienRecibeRadio}\n` +
+    mensajeExtraDestinatario +
+    `*Días entrega:* ${dias}\n*Horario:* ${horario}\n*¿Tiene el efectivo?:* ${efectivo}\n\n` +
+    `*COMPROMISOS:*\n*¿Pendiente al celular?:* ${pendienteCelular}\n*¿Entiende devoluciones?:* ${entiendeDevolucion}\n\n` +
+    `*PRODUCTOS:*\n${mensajeProductos}\n*TOTAL A PAGAR:* ${formatter.format(totalPedido)}\n\n¡Espero mi pedido!`;
   
-  // 5. Abrir WhatsApp
-  const url = `https://wa.me/${numeroWhatsApp}?text=${encodeURIComponent(texto)}`;
-  window.open(url, "_blank");
+  window.open(`https://wa.me/573166093629?text=${encodeURIComponent(texto)}`, "_blank");
 });
 
-// --- SISTEMA DE NAVEGACIÓN "ATRÁS" PARA MÓVILES ---
+// NAVEGACIÓN ATRÁS
+function registrarPaso(nombre) { window.history.pushState({ view: nombre }, ""); }
 
-// 1. Función para registrar un paso en el historial
-function registrarPaso(nombre) {
-  window.history.pushState({ view: nombre }, "");
-}
-
-// 2. Lógica del botón atrás físico o gesto
-window.onpopstate = function(event) {
-  // A. Si el menú de CATEGORÍAS está abierto, cerrarlo
+window.onpopstate = function() {
   const categoriesMenu = document.getElementById("categoriesMenu");
-  if (categoriesMenu && !categoriesMenu.classList.contains("hidden")) {
-    toggleCategoriesMenu();
-    return;
-  }
-  
-  // B. Si el CARRITO está abierto, cerrarlo
-  if (!cartSidebar.classList.contains("translate-x-full")) {
-    toggleCart();
-    return;
-  }
-  
-  // C. Si estamos en el DETALLE DE PRODUCTO, volver al catálogo
-  if (!productDetailView.classList.contains("hidden")) {
-    showCatalog();
-    return;
-  }
-  
-  // D. Si estamos en el FORMULARIO DE PEDIDO, volver al catálogo
-  if (!orderFormView.classList.contains("hidden")) {
-    closeOrderForm();
-    return;
-  }
+  if (categoriesMenu && !categoriesMenu.classList.contains("hidden")) { toggleCategoriesMenu(); return; }
+  if (!cartSidebar.classList.contains("translate-x-full")) { toggleCart(); return; }
+  if (!productDetailView.classList.contains("hidden")) { showCatalog(); return; }
+  if (!orderFormView.classList.contains("hidden")) { closeOrderForm(); return; }
 };
 
-// 3. VINCULAR CON LAS FUNCIONES EXISTENTES
-// Debes asegurarte de que al abrir estos elementos, se registre el paso en el historial
-
-// Para el Carrito
 const originalToggleCart = toggleCart;
 toggleCart = function() {
   const abriendo = cartSidebar.classList.contains("translate-x-full");
@@ -398,26 +344,30 @@ toggleCart = function() {
   if (abriendo) registrarPaso("carrito");
 };
 
-// Para el Menú de Categorías
-const originalToggleCategories = toggleCategoriesMenu;
-toggleCategoriesMenu = function() {
-  const menu = document.getElementById("categoriesMenu");
-  const abriendo = menu.classList.contains("hidden");
-  originalToggleCategories();
-  if (abriendo) registrarPaso("categorias");
-};
-
-// Para el Detalle de Producto
 const originalShowProductDetail = showProductDetail;
 showProductDetail = function(product) {
   originalShowProductDetail(product);
   registrarPaso("detalle");
 };
 
-// Para el Formulario de Pedido
 const originalConfirmOrder = confirmOrder;
 confirmOrder = function() {
   if (!cart.length) return alert("Añade productos primero");
   originalConfirmOrder();
   registrarPaso("formulario");
 };
+
+function toggleOtraPersona(show) {
+  const fields = document.getElementById('otraPersonaFields');
+  if (show) {
+    fields.classList.remove('hidden-section');
+    fields.style.display = 'block';
+    document.getElementById('nombreOtro').required = true;
+    document.getElementById('telOtro').required = true;
+  } else {
+    fields.classList.add('hidden-section');
+    fields.style.display = 'none';
+    document.getElementById('nombreOtro').required = false;
+    document.getElementById('telOtro').required = false;
+  }
+}

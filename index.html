@@ -201,9 +201,21 @@
                             </div>
                             
                             <div id="otraPersonaFields" class="hidden-section space-y-4 bg-blue-50 p-5 rounded-2xl border border-blue-100">
-                                <input type="text" id="nombreOtro" placeholder="Nombre de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
-                                <input type="tel" id="telOtro" placeholder="Celular de quien recibe *" class="input-field w-full px-4 py-3 rounded-xl bg-white">
-                            </div>
+    <h3 class="text-xs font-black uppercase text-blue-600 tracking-wider">Datos de quien recibe</h3>
+    <div>
+        <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Nombre Completo *</label>
+        <input type="text" id="nombreOtro" placeholder="Nombre de quien recibe" class="input-field w-full px-4 py-3 rounded-xl bg-white">
+    </div>
+    <div>
+        <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Celular / WhatsApp *</label>
+        <input type="tel" id="telOtro" placeholder="Ej: 316..." class="input-field w-full px-4 py-3 rounded-xl bg-white">
+    </div>
+    <div>
+        <label class="text-[10px] font-black uppercase text-slate-400 ml-2">Correo Electrónico (Opcional)</label>
+        <input type="email" id="emailOtro" placeholder="correo@ejemplo.com" class="input-field w-full px-4 py-3 rounded-xl bg-white">
+    </div>
+</div>
+
                             
                             <div>
                                 <label class="block text-sm font-semibold text-gray-700 mb-2">¿Cuenta con el efectivo completo? *</label>
@@ -211,6 +223,7 @@
                                     <option value="">Seleccione una opción...</option>
                                     <option value="SÍ, tengo el dinero completo">SÍ, tengo el dinero completo</option>
                                     <option value="SÍ, lo tendré listo">SÍ, lo tendré listo para la entrega</option>
+                                    <option value="SÍ, lo tendré listo">Aún no</option>
                                 </select>
                             </div>
                             
@@ -323,10 +336,6 @@
                     <span>Total:</span>
                     <span id="cartTotal">$0</span>
                 </div>
-                
-                <button onclick="compartirCarrito()" class="w-full py-3 rounded-xl border-2 border-indigo-600 text-indigo-600 font-bold flex items-center justify-center gap-2 hover:bg-indigo-50 transition-all">
-                    <i class="fas fa-share-alt"></i> COMPARTIR CARRITO
-                </button>
                 
                 <button onclick="confirmOrder()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">
                     CONFIRMAR PEDIDO
