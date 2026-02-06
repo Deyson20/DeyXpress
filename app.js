@@ -83,6 +83,11 @@ function renderProducts(filterTerm = "") {
 // 5. NAVEGACIÓN Y DETALLE
 function showProductDetail(product) {
   currentProduct = product;
+  document.title = product.name + " | DEYXPRESS";
+  const metaImg = document.getElementById('meta-image');
+  const metaTitle = document.getElementById('meta-title');
+  if (metaImg) metaImg.setAttribute('content', product.images[0]);
+  if (metaTitle) metaTitle.setAttribute('content', product.name);
   catalogView.classList.add("hidden");
   orderFormView.classList.add("hidden");
   productDetailView.classList.remove("hidden");
