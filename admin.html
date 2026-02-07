@@ -11,7 +11,20 @@
 </head>
 
 <body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
-  <div class="max-w-6xl mx-auto">
+  
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
+      <h2 class="text-2xl font-black mb-6">Panel de Control</h2>
+      <input type="password" id="adminPass" placeholder="Contraseña" class="w-full p-4 bg-slate-100 border-none rounded-xl mb-4 text-center font-bold">
+      <button onclick="verificarAcceso()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg">
+        ENTRAR
+      </button>
+      <p id="errorMsg" class="text-red-500 text-xs mt-4 hidden">Contraseña incorrecta</p>
+    </div>
+  </div>
+  
+  
+  <div id="adminContent" class="max-w-6xl mx-auto hidden">
     <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-[2rem] shadow-sm">
       <div>
         <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Deyxpress Admin</h1>
@@ -88,6 +101,23 @@
   </div>
   
   <script>
+    const CLAVE_CORRECTA = "1234"; // Pon la clave que quieras aquí
+    
+    function verificarAcceso() {
+      const claveIngresada = document.getElementById('adminPass').value;
+      
+      if (claveIngresada === CLAVE_CORRECTA) {
+        // Si la clave es correcta:
+        document.getElementById('loginScreen').classList.add('hidden'); // Escondemos el login
+        document.getElementById('adminContent').classList.remove('hidden'); // Mostramos el admin
+        renderAdmin(); // Ejecutamos tu función original para mostrar los productos
+      } else {
+        // Si es incorrecta:
+        document.getElementById('errorMsg').classList.remove('hidden');
+        document.getElementById('adminPass').value = "";
+      }
+    }
+    
     let copiaProductos = [...productos];
     
     function renderAdmin() {
@@ -196,9 +226,8 @@
       a.download = 'productos.js';
       a.click();
     }
-    
-    renderAdmin();
   </script>
 </body>
+
 
 </html>

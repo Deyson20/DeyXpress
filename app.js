@@ -154,6 +154,23 @@ function updateCart() {
   if (!cartItems) return;
   
   cartItems.innerHTML = "";
+  
+  if (cart.length === 0) {
+    cartItems.innerHTML = `
+      <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+        <i class="fas fa-shopping-basket text-5xl mb-4 opacity-20"></i>
+        <p class="font-bold uppercase text-xs tracking-widest">Tu carrito está vacío</p>
+        <button onclick="toggleCart()" class="mt-4 text-indigo-600 font-black text-xs uppercase underline">
+          Empezar a comprar
+        </button>
+      </div>
+    `;
+    // Actualizamos el total y el contador a cero también
+    if (cartTotal) cartTotal.textContent = formatter.format(0);
+    if (cartCounter) cartCounter.innerText = "0";
+    return; // Salimos de la función para que no intente procesar lo demás
+  }
+  
   let total = 0,
     count = 0;
   
