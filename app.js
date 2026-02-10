@@ -480,26 +480,23 @@ window.ejecutarBusqueda = function() {
 window.compartirProducto = function() {
     if (!currentProduct) return;
 
-    // Actualizamos las metaetiquetas dinámicamente para que al compartir se vea la foto
-    document.getElementById('meta-title').setAttribute('content', currentProduct.name);
-    document.getElementById('meta-desc').setAttribute('content', currentProduct.description.substring(0, 100) + "...");
-    document.getElementById('meta-image').setAttribute('content', currentProduct.images[0]);
+    // Creamos una URL especial que incluye el ID del producto
+    // Esto genera algo como: misitio.com/index.html?id=123
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentProduct.id}`;
 
     if (navigator.share) {
         navigator.share({
             title: currentProduct.name,
             text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
-            url: window.location.href
+            url: shareUrl // <--- Enviamos la URL con el ID
         })
-        .then(() => console.log('Compartido con éxito'))
         .catch((error) => console.log('Error al compartir', error));
     } else {
-        // Opción B: Copiar al portapapeles si el navegador no soporta Web Share API
-        const url = window.location.href;
-        navigator.clipboard.writeText(`${currentProduct.name} - ${url}`);
-        alert("Enlace copiado al portapapeles. ¡Ya puedes pegarlo en tus redes!");
+        navigator.clipboard.writeText(shareUrl);
+        alert("¡Enlace del producto copiado!");
     }
 };
+
 
 // --- MODIFICACIÓN EN LA FUNCIÓN QUE MUESTRA EL DETALLE ---
 // Busca tu función showProduct(id) y asegúrate de que actualice el meta-image
