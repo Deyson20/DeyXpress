@@ -105,18 +105,25 @@
             </div>
             
             <div class="hidden sm:block relative w-full max-w-md">
-                <input id="searchInput" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500">
-                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
-            </div>
+    <input id="searchInput" placeholder="Buscar productos..." class="w-full pl-10 pr-4 py-2.5 rounded-xl border focus:ring-2 focus:ring-indigo-500">
+    <button onclick="ejecutarBusqueda()" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 transition">
+        <i class="fas fa-search"></i>
+    </button>
+</div>
+
             
             <div class="flex gap-2">
                 <button onclick="toggleMobileSearch()" class="sm:hidden p-3 bg-slate-100 rounded-full">
                     <i class="fas fa-search"></i>
                 </button>
                 
-                <div id="mobileSearchContainer" class="hidden sm:hidden absolute top-full left-0 w-full bg-white p-4 shadow-md border-b">
-                    <input id="searchInputMobile" type="text" placeholder="Buscar productos..." class="w-full pl-4 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500">
-                </div>
+                <div id="mobileSearchContainer" class="hidden sm:hidden absolute top-full left-0 w-full bg-white p-4 shadow-md border-b flex gap-2">
+    <input id="searchInputMobile" type="text" placeholder="Buscar productos..." class="w-full pl-4 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-indigo-500">
+    <button onclick="ejecutarBusqueda()" class="bg-indigo-600 text-white px-4 rounded-xl">
+        <i class="fas fa-search"></i>
+    </button>
+</div>
+
                 
                 
                 <button onclick="toggleCart()" class="relative p-3 bg-slate-100 rounded-full hover:bg-slate-200 transition">
@@ -324,7 +331,7 @@
     </footer>
     
     
-    <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform">
+       <div id="cartSidebar" class="fixed inset-y-0 right-0 w-80 bg-white shadow-2xl z-50 transform translate-x-full transition-transform">
         <div class="p-6 h-full flex flex-col">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="font-black text-xl">Tu Pedido</h2>
@@ -342,14 +349,12 @@
                 <button onclick="confirmOrder()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold">
                     CONFIRMAR PEDIDO
                 </button>
-                
             </div>
         </div>
     </div>
     
-    
-    <script src="productos.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.min.js"></script>
     <script src="app.js"></script>
-</body>
-
-</html>
+    </body>
+    
+    </html>

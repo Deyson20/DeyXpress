@@ -20,106 +20,114 @@ const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 
 let cart = JSON.parse(localStorage.getItem("cart_deyxpress")) || [];
 let currentProduct = null;
 let currentCategory = "Todos";
-let productos = []; // Se llena desde la DB
+let productos = [];
 
-// 4. FUNCIONES DE CARGA Y RENDERIZADO
+// 4. FUNCIONES DE RENDERIZADO
 function loadCategories() {
-  if (!categoriesMenuList) return;
-  const cats = ["Todos", ...new Set(productos.map(p => p.category))];
-  categoriesMenuList.innerHTML = "";
-  cats.forEach(cat => {
-    const btn = document.createElement("button");
-    btn.textContent = cat;
-    btn.className = "text-left px-4 py-2 rounded-lg font-semibold hover:bg-indigo-100 transition";
-    btn.onclick = () => {
-      currentCategory = cat;
-      showCatalog();
-      renderProducts();
-      if (document.getElementById("categoriesMenu")) {
-        document.getElementById("categoriesMenu").classList.add("hidden");
-      }
-    };
-    categoriesMenuList.appendChild(btn);
-  });
+    if (!categoriesMenuList) return;
+    const cats = ["Todos", ...new Set(productos.map(p => p.category))];
+    categoriesMenuList.innerHTML = "";
+    
+    cats.forEach(cat => {
+        const btn = document.createElement("button");
+        btn.textContent = cat;
+        btn.className = "text-left px-4 py-2 rounded-lg font-semibold hover:bg-indigo-100 transition capitalize";
+        
+        btn.onclick = () => {
+            currentCategory = cat;
+            const titleEl = document.getElementById("categoryTitle");
+            const subtitleEl = document.getElementById("categorySubtitle");
+            
+            if (titleEl) titleEl.textContent = cat === "Todos" ? "Todos los productos" : cat;
+            if (subtitleEl) {
+                subtitleEl.textContent = cat === "Todos" ? "Explora nuestro catálogo completo" : `Artículos de la categoría ${cat}`;
+            }
+            
+            showCatalog();
+            renderProducts();
+            if (typeof toggleCategoriesMenu === "function") toggleCategoriesMenu();
+        };
+        categoriesMenuList.appendChild(btn);
+    });
 }
 
 function renderProducts(filterTerm = "") {
-  if (!grid) return;
-  grid.innerHTML = "";
-  
-  const titleEl = document.getElementById("categoryTitle");
-  const subtitleEl = document.getElementById("categorySubtitle");
-  
-  if (titleEl && subtitleEl) {
-    titleEl.textContent = currentCategory === "Todos" ? "Todos los productos" : currentCategory;
-    subtitleEl.textContent = currentCategory === "Todos" ? "Explora nuestro catálogo completo" : `Lo mejor en ${currentCategory.toLowerCase()}`;
-  }
-  
-  const filtered = productos
-    .filter(p => (currentCategory === "Todos" || p.category === currentCategory))
-    .filter(p => p.name.toLowerCase().includes(filterTerm.toLowerCase()));
-  
-  if (filtered.length === 0) {
-    grid.innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-slate-500">No se encontraron productos.</p></div>`;
-    return;
-  }
-  
-  filtered.forEach(p => {
-    const div = document.createElement("div");
-    div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer";
-    div.innerHTML = `
-      <img src="${p.images[0]}" class="h-40 w-full object-contain mb-3" alt="${p.name}">
+    if (!grid) return;
+    const titleEl = document.getElementById("categoryTitle");
+    if (filterTerm && titleEl) {
+        titleEl.textContent = `Buscando: ${filterTerm}`;
+    } else if (!filterTerm && titleEl) {
+        titleEl.textContent = currentCategory === "Todos" ? "Todos los productos" : currentCategory;
+    }
+    grid.innerHTML = "";
+    
+    const filtered = productos
+        .filter(p => (currentCategory === "Todos" || p.category === currentCategory))
+        .filter(p => p.name.toLowerCase().includes(filterTerm.toLowerCase()));
+    
+    if (filtered.length === 0) {
+        grid.innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-slate-500">No se encontraron productos.</p></div>`;
+        return;
+    }
+    
+    filtered.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
+        div.innerHTML = `
+      <img src="${p.images[0]}" class="h-40 w-full object-contain mb-3">
       <h3 class="font-bold text-sm h-10 line-clamp-2">${p.name}</h3>
       <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
       
-      <button onclick="event.stopPropagation(); verDetalleDesdeString('${p.id}')" class="mt-3 border border-indigo-600 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs mb-2">Ver Detalle</button>
-      
-      <button onclick="event.stopPropagation(); comprarDirecto(${p.id})" class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md shadow-indigo-100">Comprar Directo</button>
+      <div class="mt-auto space-y-2 pt-3">
+        <button onclick="event.stopPropagation(); verDetalleDesdeString('${p.id}')" 
+                class="border border-indigo-600 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs">
+                Ver Detalle
+        </button>
+        <button onclick="event.stopPropagation(); addToCart('${p.id}', this)" 
+                class="bg-indigo-50 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs border border-indigo-100 transition-all">
+                Añadir al Carrito
+        </button>
+        <button onclick="event.stopPropagation(); comprarDirecto(${p.id})" 
+                class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
+                Comprar Directo
+        </button>
+      </div>
     `;
-    div.onclick = () => showProductDetail(p);
-    grid.appendChild(div);
-  });
+        div.onclick = () => showProductDetail(p);
+        grid.appendChild(div);
+    });
 }
 
-// Función auxiliar para el botón "Ver Detalle"
 window.verDetalleDesdeString = function(id) {
     const p = productos.find(prod => prod.id == id);
-    if(p) showProductDetail(p);
+    if (p) showProductDetail(p);
 }
 
-// 5. NAVEGACIÓN Y DETALLE
+// 5. NAVEGACIÓN DE VISTAS
 function showProductDetail(product) {
-  currentProduct = product;
-  document.title = product.name + " | DEYXPRESS";
-  catalogView.classList.add("hidden");
-  orderFormView.classList.add("hidden");
-  productDetailView.classList.remove("hidden");
-  window.scrollTo(0, 0);
-  
-  const desc = product.description ? product.description.replace(/\n/g, '<br>') : 'Sin descripción';
-  const variantsHTML = product.variants && product.variants.length > 0 ?
-    `<div class="mt-4"><p class="text-xs font-bold mb-2">ELEGIR OPCIÓN:</p><select id="variantSelect" class="w-full p-3 rounded-xl border">${product.variants.map(v => `<option value="${v}">${v}</option>`).join('')}</select></div>` : '';
-  
-  detailContent.innerHTML = `
+    currentProduct = product;
+    catalogView.classList.add("hidden");
+    productDetailView.classList.remove("hidden");
+    window.scrollTo(0, 0);
+    
+    const desc = product.description ? product.description.replace(/\n/g, '<br>') : 'Sin descripción';
+    detailContent.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl border shadow-sm">
-      <img src="${product.images[0]}" class="w-full h-80 object-contain rounded-2xl bg-slate-50 border">
-      <div class="text-left">
+      <div class="relative">
+        <img src="${product.images[0]}" class="w-full h-80 object-contain rounded-2xl bg-slate-50">
+      </div>
+      <div class="text-left flex flex-col">
         <h2 class="text-2xl font-extrabold text-slate-800">${product.name}</h2>
-        <div class="text-slate-500 mt-4 text-sm leading-relaxed">${desc}</div>
-        ${variantsHTML}
-        <p class="text-indigo-600 text-3xl font-black my-6">${formatter.format(product.price)}</p>
-        
+        <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
+        <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
         <div class="space-y-3">
-            <div class="flex gap-3">
-                <input id="detailQty" type="number" min="1" value="1" class="w-20 text-center border rounded-xl font-bold text-lg">
-                <button onclick="addToCartFromDetail()" class="flex-1 bg-white border-2 border-indigo-600 text-indigo-600 py-4 rounded-xl font-bold hover:bg-indigo-50 transition">Añadir al Pedido</button>
-            </div>
-            
-            <button onclick="comprarDirectoDesdeDetail()" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition flex items-center justify-center gap-2">
-                <i class="fas fa-bolt"></i> COMPRAR AHORA
+            <button onclick="comprarDirectoDesdeDetail()" 
+                class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition uppercase tracking-wider">
+                Comprar Ahora
             </button>
-            <button onclick="compartirProductoIndividual()" class="w-full py-3 rounded-xl border border-slate-200 text-slate-500 font-bold text-sm flex items-center justify-center gap-2 hover:bg-slate-50 transition">
-                <i class="fas fa-share-alt"></i> Compartir este producto
+            <button onclick="addToCart('${product.id}', this)" 
+                class="w-full bg-white text-indigo-600 py-4 rounded-xl font-bold border-2 border-indigo-600 hover:bg-indigo-50 transition uppercase tracking-wider">
+                Añadir al Carrito
             </button>
         </div>
       </div>
@@ -127,151 +135,268 @@ function showProductDetail(product) {
 }
 
 function showCatalog() {
-  document.title = "DEYXPRESS - Pago Contraentrega";
-  productDetailView.classList.add("hidden");
-  orderFormView.classList.add("hidden");
-  catalogView.classList.remove("hidden");
+    catalogView.classList.remove("hidden");
+    productDetailView.classList.add("hidden");
+    orderFormView.classList.add("hidden");
 }
 
-// 6. GESTIÓN DEL CARRITO
+// 6. LÓGICA DEL CARRITO
 function updateCart() {
-  localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
-  if (!cartItems) return;
-  cartItems.innerHTML = "";
-  
-  if (cart.length === 0) {
-    cartItems.innerHTML = `<div class="flex flex-col items-center justify-center py-12 text-slate-400"><p class="font-bold uppercase text-xs">Tu carrito está vacío</p></div>`;
-    if (cartTotal) cartTotal.textContent = formatter.format(0);
-    if (cartCounter) cartCounter.innerText = "0";
-    return;
-  }
-  
-  let total = 0, count = 0;
-  cart.forEach((item, index) => {
-    total += item.price * item.qty;
-    count += item.qty;
-    const div = document.createElement("div");
-    div.className = "bg-white p-3 rounded-xl flex flex-col border mb-2 shadow-sm";
-    div.innerHTML = `
-      <div class="flex justify-between items-start mb-2">
-        <div class="flex-1">
-          <p class="font-bold text-xs text-slate-800">${item.name}</p>
-          <p class="text-[10px] text-indigo-600 font-bold">${formatter.format(item.price)} c/u</p>
-        </div>
-        <button onclick="removeFromCart(${index})" class="text-red-400"><i class="fas fa-trash-alt text-xs"></i></button>
-      </div>`;
-    cartItems.appendChild(div);
-  });
-  cartTotal.textContent = formatter.format(total);
-  cartCounter.textContent = count;
-}
-
-function addToCartFromDetail() {
-  const qty = parseInt(document.getElementById("detailQty").value);
-  const variantInput = document.getElementById("variantSelect");
-  const selectedVariant = variantInput ? variantInput.value : null;
-  const existing = cart.find(i => i.id === currentProduct.id && i.selectedVariant === selectedVariant);
-  if (existing) { existing.qty += qty; } else { cart.push({ ...currentProduct, qty, selectedVariant }); }
-  updateCart();
-  if (cartSidebar.classList.contains("translate-x-full")) toggleCart();
-}
-
-function removeFromCart(index) { cart.splice(index, 1); updateCart(); }
-function toggleCart() { cartSidebar.classList.toggle("translate-x-full"); }
-function toggleCategoriesMenu() { document.getElementById("categoriesMenu").classList.toggle("hidden"); }
-
-// 7. FORMULARIO DE PEDIDO
-function confirmOrder() {
-  if (!cart.length) return alert("Añade productos primero");
-  catalogView.classList.add("hidden");
-  productDetailView.classList.add("hidden");
-  if (!cartSidebar.classList.contains("translate-x-full")) toggleCart();
-  orderFormView.classList.remove("hidden");
-  window.scrollTo(0, 0);
-}
-
-function comprarDirecto(productId) {
-  const p = productos.find(item => item.id === productId);
-  if (!p) return;
-  cart = [{ ...p, qty: 1, selectedVariant: p.variants && p.variants.length > 0 ? p.variants[0] : null }];
-  updateCart();
-  confirmOrder();
-}
-
-// 8. MOTOR DE INICIALIZACIÓN (SQLITE)
-async function iniciarTiendaConDB() {
-  try {
-    const SQL = await initSqlJs({
-      locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+    localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
+    if (!cartItems) return;
+    
+    cartItems.innerHTML = "";
+    let total = 0;
+    let count = 0;
+    
+    cart.forEach((item, index) => {
+        total += item.price * item.qty;
+        count += item.qty;
+        const div = document.createElement("div");
+        div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
+        div.innerHTML = `
+          <img src="${item.images[0]}" class="w-12 h-12 object-cover rounded-lg">
+          <div class="flex-1">
+            <h4 class="text-xs font-bold line-clamp-1">${item.name}</h4>
+            <p class="text-indigo-600 font-black text-sm">${formatter.format(item.price)}</p>
+            <div class="flex items-center gap-2 mt-1">
+              <button onclick="changeQty(${index}, -1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">-</button>
+              <span class="text-xs font-bold">${item.qty}</span>
+              <button onclick="changeQty(${index}, 1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">+</button>
+            </div>
+          </div>
+          <button onclick="removeFromCart(${index})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
+        `;
+        cartItems.appendChild(div);
     });
     
-    const response = await fetch('tienda.db');
-    if (!response.ok) throw new Error("Archivo tienda.db no encontrado");
-    
-    const arrayBuffer = await response.arrayBuffer();
-    const db = new SQL.Database(new Uint8Array(arrayBuffer));
-    const res = db.exec("SELECT * FROM productos");
-    
-    if (res.length > 0) {
-      const columnas = res[0].columns;
-      const filas = res[0].values;
-      productos = filas.map(fila => {
-        let obj = {};
-        columnas.forEach((col, i) => {
-          if (col === 'images' || col === 'variants') {
-            try { obj[col] = JSON.parse(fila[i]); } catch (e) { obj[col] = []; }
-          } else { obj[col] = fila[i]; }
-        });
-        return obj;
-      });
-    }
-    
-    loadCategories();
-    renderProducts();
-    updateCart();
-
-    const urlParams = new URLSearchParams(window.location.search);
-    const productId = urlParams.get('pid');
-    if (productId) {
-      const prod = productos.find(p => p.id == productId);
-      if (prod) showProductDetail(prod);
-    }
-
-    if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
-    if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
-
-  } catch (error) {
-    console.error("Error DB:", error);
-    if (grid) grid.innerHTML = `<p class="text-center py-20 text-red-500">Error al cargar el catálogo .db</p>`;
-  }
+    if (cartTotal) cartTotal.textContent = formatter.format(total);
+    if (cartCounter) cartCounter.textContent = count;
 }
 
-document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
+window.addToCart = function(productId, btnElement = null) {
+    const p = productos.find(item => item.id == productId);
+    if (!p) return;
+    
+    const existingIndex = cart.findIndex(item => item.id == productId);
+    if (existingIndex !== -1) {
+        cart[existingIndex].qty++;
+    } else {
+        cart.push({ ...p, qty: 1 });
+    }
+    
+    updateCart();
+    
+    // Feedback visual en el botón
+    if (btnElement) {
+        const originalText = btnElement.innerHTML;
+        btnElement.innerHTML = "¡Agregado! ✅";
+        btnElement.classList.add("bg-green-50", "text-green-600", "border-green-200");
+        setTimeout(() => {
+            btnElement.innerHTML = originalText;
+            btnElement.classList.remove("bg-green-50", "text-green-600", "border-green-200");
+        }, 1500);
+    }
+    
+    // Abrir carrito automáticamente
+    if (cartSidebar) cartSidebar.classList.remove("translate-x-full");
+};
 
-// --- FUNCIONES ADICIONALES ---
-function toggleMobileSearch() {
-  const container = document.getElementById("mobileSearchContainer");
-  if (container) container.classList.toggle("hidden");
+window.changeQty = function(index, delta) {
+    if (cart[index]) {
+        cart[index].qty += delta;
+        if (cart[index].qty < 1) removeFromCart(index);
+        else updateCart();
+    }
+};
+
+window.removeFromCart = function(index) {
+    cart.splice(index, 1);
+    updateCart();
+};
+
+function comprarDirecto(productId) {
+    const p = productos.find(item => item.id === productId);
+    if (!p) return;
+    cart = [{ ...p, qty: 1 }];
+    updateCart();
+    confirmOrder();
 }
 
 function comprarDirectoDesdeDetail() {
-  if (!currentProduct) return;
-  const qty = parseInt(document.getElementById("detailQty").value) || 1;
-  const variantInput = document.getElementById("variantSelect");
-  cart = [{ ...currentProduct, qty, selectedVariant: variantInput ? variantInput.value : null }];
-  updateCart();
-  confirmOrder();
+    if (!currentProduct) return;
+    cart = [{ ...currentProduct, qty: 1 }];
+    updateCart();
+    confirmOrder();
 }
 
-function compartirProductoIndividual() {
-  const url = `${window.location.origin}${window.location.pathname}?pid=${currentProduct.id}`;
-  if (navigator.share) { navigator.share({ title: currentProduct.name, url }); }
-  else { navigator.clipboard.writeText(url); alert("Copiado!"); }
+// 7. MOTOR DB (SQLITE)
+async function iniciarTiendaConDB() {
+    try {
+        const SQL = await initSqlJs({
+            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+        });
+        const response = await fetch('tienda.db');
+        if (!response.ok) throw new Error("No se encontró tienda.db");
+        const arrayBuffer = await response.arrayBuffer();
+        const db = new SQL.Database(new Uint8Array(arrayBuffer));
+        const res = db.exec("SELECT * FROM productos");
+        
+        if (res.length > 0) {
+            const columnas = res[0].columns;
+            const filas = res[0].values;
+            productos = filas.map(fila => {
+                let obj = {};
+                columnas.forEach((col, i) => {
+                    if (col === 'images' || col === 'variants') {
+                        try { obj[col] = JSON.parse(fila[i]); } catch (e) { obj[col] = []; }
+                    } else { obj[col] = fila[i]; }
+                });
+                return obj;
+            });
+        }
+        loadCategories();
+        renderProducts();
+        updateCart();
+        if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
+        if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
+    } catch (error) { console.error("Error:", error); }
 }
+document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
 
-// WHATSAPP Y NAVEGACIÓN (Resto del código original simplificado)
+// 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL)
+window.toggleCart = function() {
+    if (!cartSidebar) return;
+    cartSidebar.classList.toggle("translate-x-full");
+    if (!cartSidebar.classList.contains("translate-x-full")) {
+        history.pushState({ view: history.state?.view || 'catalog', panel: 'cart' }, "");
+    }
+};
+    window.confirmOrder = function() {
+    // Ocultamos catálogo y detalle, mostramos formulario
+    catalogView.classList.add("hidden");
+    productDetailView.classList.add("hidden");
+    orderFormView.classList.remove("hidden");
+    
+    // Cerramos el carrito lateral si está abierto
+    if (cartSidebar) cartSidebar.classList.add("translate-x-full");
+    
+    window.scrollTo(0, 0);
+};
+
+window.toggleCategoriesMenu = function() {
+    const menu = document.getElementById("categoriesMenu");
+    if (!menu) return;
+    menu.classList.toggle("hidden");
+    if (!menu.classList.contains("hidden")) {
+        history.pushState({ view: history.state?.view || 'catalog', panel: 'menu' }, "");
+    }
+};
+
+window.closeOrderForm = function() {
+    if (history.state?.view === 'order') history.back();
+    else {
+        orderFormView.classList.add("hidden");
+        catalogView.classList.remove("hidden");
+    }
+};
+
+window.onpopstate = function(event) {
+    const menu = document.getElementById("categoriesMenu");
+    if (menu && !menu.classList.contains("hidden")) { menu.classList.add("hidden"); return; }
+    if (cartSidebar && !cartSidebar.classList.contains("translate-x-full")) { cartSidebar.classList.add("translate-x-full"); return; }
+    
+    if (event.state) {
+        const view = event.state.view;
+        if (view === 'catalog') showCatalog(false);
+        else if (view === 'detail') showProductDetail(event.state.product, false);
+        else if (view === 'order') confirmOrder(false);
+    } else { showCatalog(false); }
+};
+
+const _originalShowProductDetail = showProductDetail;
+showProductDetail = function(product, push = true) {
+    _originalShowProductDetail(product);
+    if (push) history.pushState({ view: 'detail', product: product }, "");
+};
+
+const _originalShowCatalog = showCatalog;
+showCatalog = function(push = true) {
+    _originalShowCatalog();
+    if (push) history.pushState({ view: 'catalog' }, "");
+};
+
+const _originalConfirmOrder = confirmOrder;
+confirmOrder = function(push = true) {
+    _originalConfirmOrder();
+    if (push) history.pushState({ view: 'order' }, "");
+};
+
+history.replaceState({ view: 'catalog' }, "");
+
+// 9. WHATSAPP FORM
 document.getElementById("orderForm")?.addEventListener("submit", function(e) {
-  e.preventDefault();
-  // ... (Aquí va tu lógica de WhatsApp que ya tienes)
-  alert("Redirigiendo a WhatsApp...");
+    e.preventDefault();
+    if (cart.length === 0) return alert("El carrito está vacío");
+    const getVal = (id) => document.getElementById(id).value;
+    const quienRecibe = document.querySelector('input[name="quienRecibe"]:checked')?.value;
+    let datosRecibe = `*Recibe:* ${quienRecibe}`;
+    if (quienRecibe === "Otra persona") {
+        datosRecibe += `\n*Nombre:* ${getVal("nombreOtro")}\n*Tel:* ${getVal("telOtro")}`;
+    }
+    let totalPedido = 0;
+    let listaProductos = cart.map(item => { totalPedido += (item.price * item.qty); return `- ${item.name} (x${item.qty})`; }).join('\n');
+    const mensaje = `*NUEVO PEDIDO - DEYXPRESS*\nCLIENTE: ${getVal("nombre")}\nTEL: ${getVal("telefono")}\nDIRECCIÓN: ${getVal("direccion")}\nBARRIO: ${getVal("barrio")}\nCIUDAD: ${getVal("ciudad")}\n${datosRecibe}\nPRODUCTOS:\n${listaProductos}\nTOTAL: ${formatter.format(totalPedido)}`;
+    window.open(`https://wa.me/573166093629?text=${encodeURIComponent(mensaje)}`, '_blank');
+    cart = [];
+    localStorage.removeItem("cart_deyxpress");
+    updateCart();
+    location.reload();
+});
+
+// --- FUNCIONES DE INTERFAZ EXTRAS ---
+
+window.toggleMobileSearch = function() {
+    const c = document.getElementById("mobileSearchContainer");
+    if (c) {
+        c.classList.toggle("hidden");
+        if (!c.classList.contains("hidden")) document.getElementById("searchInputMobile").focus();
+    }
+};
+
+window.toggleOtraPersona = function(s) {
+    const f = document.getElementById("otraPersonaFields");
+    if (f) {
+        f.classList.toggle("hidden-section", !s);
+        f.querySelectorAll('input').forEach(i => i.required = s);
+    }
+};
+
+// --- FUNCIONALIDAD DEL BUSCADOR (BOTÓN LUPA Y ENTER) ---
+
+window.ejecutarBusqueda = function() {
+    // Detectamos cuál buscador tiene texto (Escritorio o Móvil)
+    const term = (document.getElementById("searchInput").value ||
+        document.getElementById("searchInputMobile").value || "").toLowerCase();
+    
+    // Ejecutamos el renderizado con el filtro
+    renderProducts(term);
+    
+    // Si estamos en móvil y el buscador está abierto, lo cerramos
+    const mobileSearchContainer = document.getElementById("mobileSearchContainer");
+    if (mobileSearchContainer && !mobileSearchContainer.classList.contains("hidden")) {
+        toggleMobileSearch();
+    }
+    
+    // Scroll suave hacia arriba para ver los resultados
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// Configurar tecla "Enter" en ambos buscadores
+[document.getElementById("searchInput"), document.getElementById("searchInputMobile")].forEach(input => {
+    input?.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") {
+            window.ejecutarBusqueda();
+        }
+    });
 });
