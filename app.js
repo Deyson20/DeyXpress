@@ -272,7 +272,7 @@ window.toggleCart = function() {
         history.pushState({ view: history.state?.view || 'catalog', panel: 'cart' }, "");
     }
 };
-    window.confirmOrder = function() {
+window.confirmOrder = function() {
     // Ocultamos catálogo y detalle, mostramos formulario
     catalogView.classList.add("hidden");
     productDetailView.classList.add("hidden");
@@ -334,25 +334,97 @@ confirmOrder = function(push = true) {
 
 history.replaceState({ view: 'catalog' }, "");
 
-// 9. WHATSAPP FORM
+// 9. WHATSAPP FORM - FORMATO TICKET PROFESIONAL CORREGIDO
 document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     e.preventDefault();
-    if (cart.length === 0) return alert("El carrito está vacío");
-    const getVal = (id) => document.getElementById(id).value;
-    const quienRecibe = document.querySelector('input[name="quienRecibe"]:checked')?.value;
-    let datosRecibe = `*Recibe:* ${quienRecibe}`;
-    if (quienRecibe === "Otra persona") {
-        datosRecibe += `\n*Nombre:* ${getVal("nombreOtro")}\n*Tel:* ${getVal("telOtro")}`;
+    
+    if (cart.length === 0) {
+        alert("El carrito está vacío");
+        return;
     }
+
+    // Función para obtener texto por ID
+    const getVal = (id) => {
+        const el = document.getElementById(id);
+        return (el && el.value.trim() !== "") ? el.value.trim() : "Ninguna";
+    };
+
+    // Función para obtener Radio Buttons por Name
+    const getRadio = (name) => {
+        const selected = document.querySelector(`input[name="${name}"]:checked`);
+        return selected ? selected.value : "No especificado";
+    };
+
+    // Obtener días seleccionados (Checkboxes)
+    const diasSeleccionados = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
+        .map(el => el.value)
+        .join(", ");
+    const diasTexto = diasSeleccionados || "No especificado";
+
+    // Nombre del primer producto
+    const tituloProducto = cart.length > 0 ? cart[0].name : "PRODUCTO";
+
+    // Calcular total
     let totalPedido = 0;
-    let listaProductos = cart.map(item => { totalPedido += (item.price * item.qty); return `- ${item.name} (x${item.qty})`; }).join('\n');
-    const mensaje = `*NUEVO PEDIDO - DEYXPRESS*\nCLIENTE: ${getVal("nombre")}\nTEL: ${getVal("telefono")}\nDIRECCIÓN: ${getVal("direccion")}\nBARRIO: ${getVal("barrio")}\nCIUDAD: ${getVal("ciudad")}\n${datosRecibe}\nPRODUCTOS:\n${listaProductos}\nTOTAL: ${formatter.format(totalPedido)}`;
-    window.open(`https://wa.me/573166093629?text=${encodeURIComponent(mensaje)}`, '_blank');
+    cart.forEach(item => { totalPedido += (item.price * item.qty); });
+
+    // Lógica de quién recibe
+    const quienRecibe = getRadio("quienRecibe");
+    let recibeTexto = quienRecibe;
+    if (quienRecibe === "Otra persona") {
+        recibeTexto = `${getVal("nombreOtro")} (Tel: ${getVal("telOtro")})`;
+    }
+
+    // CONSTRUCCIÓN DEL MENSAJE (EL QUE TÚ QUERÍAS)
+    const mensaje = 
+`*NUEVO PEDIDO ${tituloProducto.toUpperCase()}*
+━━━━━━━━━━━━━━━━━━
+👤 *DATOS PERSONALES*
+• Nombre: ${getVal("nombre")}
+• Celular: ${getVal("telefono")}
+• Email: ${getVal("email")}
+
+📍 *DIRECCIÓN DE ENVÍO*
+• Depto: ${getVal("departamento")}
+• Ciudad: ${getVal("ciudad")}
+• Barrio: ${getVal("barrio")}
+• Dir: ${getVal("direccion")}
+• Ref: *${getVal("referencia")}*
+
+💰 *ESTADO DE PAGO (COD)*
+• ¿Dinero listo?: *${getVal("confirmacionEfectivo")}*
+
+🚚 *DETALLES DE ENTREGA*
+• Tipo: Residencial/Oficina
+• Recibe: ${recibeTexto}
+• Días disponibles: *${diasTexto}*
+• Horario: ${getVal("horario")}
+
+📝 *OBSERVACIONES:* ${getVal("observaciones")}
+
+🛡️ *COMPROMISOS:*
+• ¿Dejará dinero?: *${getRadio("p1")}*
+• ¿Pendiente celular?: *${getRadio("p2")}*
+• ¿Entiende pérdida?: *${getRadio("p3")}*
+━━━━━━━━━━━━━━━━━━
+💰 *TOTAL A PAGAR: ${formatter.format(totalPedido)}*
+✅ *PEDIDO VALIDADO*`;
+
+    const fone = "573166093629";
+    const wpUrl = `https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`;
+    
+    window.open(wpUrl, '_blank');
+
+    // Reiniciar carrito
     cart = [];
     localStorage.removeItem("cart_deyxpress");
     updateCart();
-    location.reload();
+    setTimeout(() => { location.reload(); }, 1000);
 });
+
+
+
+
 
 // --- FUNCIONES DE INTERFAZ EXTRAS ---
 
