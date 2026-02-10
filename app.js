@@ -510,19 +510,52 @@ window.showProduct = function(id) {
     }
 };
 
+
 // --- LÓGICA PARA ABRIR PRODUCTO DESDE LINK ---
 window.addEventListener('load', () => {
-    // Revisamos si la URL tiene un ID (ej: ?id=5)
-    const urlParams = new URLSearchParams(window.search || window.location.search);
+    // 1. Corregimos la captura de parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
     
     if (productId) {
-        // Esperamos un momento a que los productos carguen de la DB
+        console.log("ID detectado en URL:", productId);
+        
+        // 2. Usamos un intervalo para esperar a que los productos carguen de la DB
         const checkProducts = setInterval(() => {
-            if (productos && productos.length > 0) {
-                window.showProduct(productId);
+            if (typeof productos !== 'undefined' && productos.length > 0) {
+                // 3. Buscamos si el producto existe
+                const existe = productos.find(p => p.id == productId);
+                if (existe) {
+                    window.showProduct(productId);
+                    // 4. Limpia la URL para que no se reabra solo al refrescar
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                }
                 clearInterval(checkProducts);
             }
         }, 100);
+        
+        // Seguridad: detener búsqueda tras 5 segundos
+        setTimeout(() => clearInterval(checkProducts), 5000);
     }
 });
+
+// --- FUNCIÓN PARA COMPARTIR ---
+window.shareProduct = function(id) {
+    const p = productos.find(x => x.id == id);
+    if (!p) return;
+    
+    // Generamos la URL con el ID del producto
+    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
+    
+    if (navigator.share) {
+        navigator.share({
+            title: p.name,
+            text: `Mira este producto en DEYXPRESS: ${p.name}`,
+            url: shareUrl
+        }).catch((error) => console.log('Error al compartir', error));
+    } else {
+        // Opción para computadoras o navegadores sin "Compartir" nativo
+        navigator.clipboard.writeText(shareUrl);
+        alert("¡Enlace del producto copiado al portapapeles!");
+    }
+};
