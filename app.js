@@ -87,10 +87,10 @@ function renderProducts(filterTerm = "") {
                 class="bg-indigo-50 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs border border-indigo-100 transition-all">
                 Añadir al Carrito
         </button>
-        <button onclick="event.stopPropagation(); comprarDirecto(${p.id})" 
-                class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
-                Comprar Directo
-        </button>
+        <button onclick="event.stopPropagation(); comprarDirecto('${p.id}')" 
+        class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
+        Comprar Directo
+</button>
       </div>
     `;
         div.onclick = () => showProductDetail(p);
@@ -216,11 +216,11 @@ window.removeFromCart = function(index) {
 };
 
 function comprarDirecto(productId) {
-    const p = productos.find(item => item.id === productId);
-    if (!p) return;
-    cart = [{ ...p, qty: 1 }];
-    updateCart();
-    confirmOrder();
+    const p = productos.find(item => item.id == productId);
+if (!p) return;
+cart = [{ ...p, qty: 1 }];
+updateCart();
+confirmOrder();
 }
 
 function comprarDirectoDesdeDetail() {
@@ -264,7 +264,14 @@ async function iniciarTiendaConDB() {
 }
 document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
 
-// 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL)
+// 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL )
+window.showProduct = function(id) {
+    const p = productos.find(prod => prod.id == id);
+    if (p) {
+        showProductDetail(p); // Llama a tu función real
+    }
+};
+
 window.toggleCart = function() {
     if (!cartSidebar) return;
     cartSidebar.classList.toggle("translate-x-full");
@@ -513,31 +520,29 @@ window.showProduct = function(id) {
 
 // --- LÓGICA PARA ABRIR PRODUCTO DESDE LINK ---
 window.addEventListener('load', () => {
-    // 1. Corregimos la captura de parámetros de la URL
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
     
     if (productId) {
-        console.log("ID detectado en URL:", productId);
-        
-        // 2. Usamos un intervalo para esperar a que los productos carguen de la DB
         const checkProducts = setInterval(() => {
             if (typeof productos !== 'undefined' && productos.length > 0) {
-                // 3. Buscamos si el producto existe
+                // Buscamos el producto con ==
                 const existe = productos.find(p => p.id == productId);
                 if (existe) {
-                    window.showProduct(productId);
-                    // 4. Limpia la URL para que no se reabra solo al refrescar
+                    showProductDetail(existe);
+                    // Actualizamos meta tags visuales para el usuario
+                    if(document.getElementById('meta-image')) 
+                        document.getElementById('meta-image').src = existe.images[0];
+                    
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
                 clearInterval(checkProducts);
             }
         }, 100);
-        
-        // Seguridad: detener búsqueda tras 5 segundos
         setTimeout(() => clearInterval(checkProducts), 5000);
     }
 });
+
 
 // --- FUNCIÓN PARA COMPARTIR ---
 window.shareProduct = function(id) {
