@@ -334,7 +334,7 @@ confirmOrder = function(push = true) {
 
 history.replaceState({ view: 'catalog' }, "");
 
-// 9. WHATSAPP FORM - FORMATO TICKET PROFESIONAL CORREGIDO
+// 9. WHATSAPP FORM - ENCABEZADO SIMPLIFICADO Y LISTA DE PRODUCTOS
 document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     e.preventDefault();
     
@@ -342,42 +342,41 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
         alert("El carrito está vacío");
         return;
     }
-
-    // Función para obtener texto por ID
+    
     const getVal = (id) => {
         const el = document.getElementById(id);
         return (el && el.value.trim() !== "") ? el.value.trim() : "Ninguna";
     };
-
-    // Función para obtener Radio Buttons por Name
+    
     const getRadio = (name) => {
         const selected = document.querySelector(`input[name="${name}"]:checked`);
         return selected ? selected.value : "No especificado";
     };
-
-    // Obtener días seleccionados (Checkboxes)
+    
+    // 1. Generar la lista de productos
+    let listaProductos = "";
+    let totalPedido = 0;
+    cart.forEach(item => {
+        totalPedido += (item.price * item.qty);
+        listaProductos += `• ${item.name} (x${item.qty})\n`;
+    });
+    
+    // 2. Capturar días seleccionados
     const diasSeleccionados = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
         .map(el => el.value)
         .join(", ");
     const diasTexto = diasSeleccionados || "No especificado";
-
-    // Nombre del primer producto
-    const tituloProducto = cart.length > 0 ? cart[0].name : "PRODUCTO";
-
-    // Calcular total
-    let totalPedido = 0;
-    cart.forEach(item => { totalPedido += (item.price * item.qty); });
-
-    // Lógica de quién recibe
+    
+    // 3. Lógica de quién recibe
     const quienRecibe = getRadio("quienRecibe");
     let recibeTexto = quienRecibe;
     if (quienRecibe === "Otra persona") {
         recibeTexto = `${getVal("nombreOtro")} (Tel: ${getVal("telOtro")})`;
     }
-
-    // CONSTRUCCIÓN DEL MENSAJE (EL QUE TÚ QUERÍAS)
-    const mensaje = 
-`*NUEVO PEDIDO ${tituloProducto.toUpperCase()}*
+    
+    // CONSTRUCCIÓN DEL MENSAJE (TÍTULO LIMPIO)
+    const mensaje =
+        `*NUEVO PEDIDO*
 ━━━━━━━━━━━━━━━━━━
 👤 *DATOS PERSONALES*
 • Nombre: ${getVal("nombre")}
@@ -391,16 +390,18 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
 • Dir: ${getVal("direccion")}
 • Ref: *${getVal("referencia")}*
 
+🛒 *PRODUCTOS:*
+${listaProductos}
 💰 *ESTADO DE PAGO (COD)*
 • ¿Dinero listo?: *${getVal("confirmacionEfectivo")}*
 
 🚚 *DETALLES DE ENTREGA*
 • Tipo: Residencial/Oficina
-• Recibe: ${recibeTexto}
+• Recibe: recibeTexto
 • Días disponibles: *${diasTexto}*
 • Horario: ${getVal("horario")}
 
-📝 *OBSERVACIONES:* ${getVal("observaciones")}
+📝 *OBSERVACIONES:* Ninguna
 
 🛡️ *COMPROMISOS:*
 • ¿Dejará dinero?: *${getRadio("p1")}*
@@ -409,18 +410,20 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
 ━━━━━━━━━━━━━━━━━━
 💰 *TOTAL A PAGAR: ${formatter.format(totalPedido)}*
 ✅ *PEDIDO VALIDADO*`;
-
+    
     const fone = "573166093629";
     const wpUrl = `https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`;
     
     window.open(wpUrl, '_blank');
-
-    // Reiniciar carrito
+    
+    // Reiniciar aplicación
     cart = [];
     localStorage.removeItem("cart_deyxpress");
     updateCart();
     setTimeout(() => { location.reload(); }, 1000);
 });
+
+
 
 
 
@@ -472,3 +475,46 @@ window.ejecutarBusqueda = function() {
         }
     });
 });
+
+// --- FUNCIÓN PARA COMPARTIR PRODUCTO ---
+window.compartirProducto = function() {
+    if (!currentProduct) return;
+
+    // Actualizamos las metaetiquetas dinámicamente para que al compartir se vea la foto
+    document.getElementById('meta-title').setAttribute('content', currentProduct.name);
+    document.getElementById('meta-desc').setAttribute('content', currentProduct.description.substring(0, 100) + "...");
+    document.getElementById('meta-image').setAttribute('content', currentProduct.images[0]);
+
+    if (navigator.share) {
+        navigator.share({
+            title: currentProduct.name,
+            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+            url: window.location.href
+        })
+        .then(() => console.log('Compartido con éxito'))
+        .catch((error) => console.log('Error al compartir', error));
+    } else {
+        // Opción B: Copiar al portapapeles si el navegador no soporta Web Share API
+        const url = window.location.href;
+        navigator.clipboard.writeText(`${currentProduct.name} - ${url}`);
+        alert("Enlace copiado al portapapeles. ¡Ya puedes pegarlo en tus redes!");
+    }
+};
+
+// --- MODIFICACIÓN EN LA FUNCIÓN QUE MUESTRA EL DETALLE ---
+// Busca tu función showProduct(id) y asegúrate de que actualice el meta-image
+const originalShowProduct = window.showProduct;
+window.showProduct = function(id) {
+    // Buscamos el producto
+    const p = productos.find(x => x.id == id);
+    if(p) {
+        // Cambiamos la imagen de la metaetiqueta inmediatamente
+        document.getElementById('meta-image').setAttribute('content', p.images[0]);
+        document.getElementById('meta-title').setAttribute('content', p.name);
+    }
+    
+    // Llamamos a la función original que ya tenías
+    if (typeof originalShowProduct === "function") {
+        originalShowProduct(id);
+    }
+};
