@@ -423,12 +423,6 @@ ${listaProductos}
     setTimeout(() => { location.reload(); }, 1000);
 });
 
-
-
-
-
-
-
 // --- FUNCIONES DE INTERFAZ EXTRAS ---
 
 window.toggleMobileSearch = function() {
@@ -479,18 +473,18 @@ window.ejecutarBusqueda = function() {
 // --- FUNCIÓN PARA COMPARTIR PRODUCTO ---
 window.compartirProducto = function() {
     if (!currentProduct) return;
-
+    
     // Creamos una URL especial que incluye el ID del producto
     // Esto genera algo como: misitio.com/index.html?id=123
     const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentProduct.id}`;
-
+    
     if (navigator.share) {
         navigator.share({
-            title: currentProduct.name,
-            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
-            url: shareUrl // <--- Enviamos la URL con el ID
-        })
-        .catch((error) => console.log('Error al compartir', error));
+                title: currentProduct.name,
+                text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+                url: shareUrl // <--- Enviamos la URL con el ID
+            })
+            .catch((error) => console.log('Error al compartir', error));
     } else {
         navigator.clipboard.writeText(shareUrl);
         alert("¡Enlace del producto copiado!");
@@ -504,7 +498,7 @@ const originalShowProduct = window.showProduct;
 window.showProduct = function(id) {
     // Buscamos el producto
     const p = productos.find(x => x.id == id);
-    if(p) {
+    if (p) {
         // Cambiamos la imagen de la metaetiqueta inmediatamente
         document.getElementById('meta-image').setAttribute('content', p.images[0]);
         document.getElementById('meta-title').setAttribute('content', p.name);
@@ -515,3 +509,20 @@ window.showProduct = function(id) {
         originalShowProduct(id);
     }
 };
+
+// --- LÓGICA PARA ABRIR PRODUCTO DESDE LINK ---
+window.addEventListener('load', () => {
+    // Revisamos si la URL tiene un ID (ej: ?id=5)
+    const urlParams = new URLSearchParams(window.search || window.location.search);
+    const productId = urlParams.get('id');
+    
+    if (productId) {
+        // Esperamos un momento a que los productos carguen de la DB
+        const checkProducts = setInterval(() => {
+            if (productos && productos.length > 0) {
+                window.showProduct(productId);
+                clearInterval(checkProducts);
+            }
+        }, 100);
+    }
+});
