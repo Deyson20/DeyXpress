@@ -334,26 +334,13 @@ confirmOrder = function(push = true) {
 
 history.replaceState({ view: 'catalog' }, "");
 
-// 9. WHATSAPP FORM - ENCABEZADO SIMPLIFICADO Y LISTA DE PRODUCTOS
+// 9. WHATSAPP FORM - CON CAMPOS COMPLETOS
 document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     e.preventDefault();
     
-    if (cart.length === 0) {
-        alert("El carrito está vacío");
-        return;
-    }
+    if (cart.length === 0) return alert("El carrito está vacío");
     
-    const getVal = (id) => {
-        const el = document.getElementById(id);
-        return (el && el.value.trim() !== "") ? el.value.trim() : "Ninguna";
-    };
-    
-    const getRadio = (name) => {
-        const selected = document.querySelector(`input[name="${name}"]:checked`);
-        return selected ? selected.value : "No especificado";
-    };
-    
-    // 1. Generar la lista de productos
+    // 1. Recopilar los productos del carrito
     let listaProductos = "";
     let totalPedido = 0;
     cart.forEach(item => {
@@ -361,67 +348,80 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
         listaProductos += `• ${item.name} (x${item.qty})\n`;
     });
     
-    // 2. Capturar días seleccionados
-    const diasSeleccionados = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
-        .map(el => el.value)
-        .join(", ");
-    const diasTexto = diasSeleccionados || "No especificado";
+    // 2. Capturar los valores del formulario
+    const nombre = document.getElementById("nombre").value;
+    const telefono = document.getElementById("telefono").value;
+    const departamento = document.getElementById("departamento").value; // Agregado
+    const ciudad = document.getElementById("ciudad").value;
+    const barrio = document.getElementById("barrio").value;
+    const tipoRes = document.getElementById("tipoResidencia").value;
+    const direccion = document.getElementById("direccion").value;
+    const referencia = document.getElementById("referencia").value;
+    const horario = document.getElementById("horario").value;
+    const efectivo = document.getElementById("confirmacionEfectivo").value;
     
-    // 3. Lógica de quién recibe
-    const quienRecibe = getRadio("quienRecibe");
-    let recibeTexto = quienRecibe;
-    if (quienRecibe === "Otra persona") {
-        recibeTexto = `${getVal("nombreOtro")} (Tel: ${getVal("telOtro")})`;
+    // 3. Capturar campos de Compromiso (Nuevos)
+    const dejaDinero = document.querySelector('input[name="p1"]:checked')?.value || "No especificado";
+    const estaraPendiente = document.querySelector('input[name="p2"]:checked')?.value || "No especificado";
+    const entiendeDevolucion = document.querySelector('input[name="p3"]:checked')?.value || "No especificado";
+    
+    // 4. Lógica para determinar quién recibe
+    const quienRecibeOpcion = document.querySelector('input[name="quienRecibe"]:checked')?.value;
+    let recibeTexto = "";
+    
+    if (quienRecibeOpcion === "Otra persona") {
+        const nombreOtro = document.getElementById("nombreOtro").value;
+        const telOtro = document.getElementById("telOtro").value;
+        recibeTexto = `Otra persona: ${nombreOtro} (Tel: ${telOtro})`;
+    } else {
+        recibeTexto = "El cliente personalmente";
     }
     
-    // CONSTRUCCIÓN DEL MENSAJE (TÍTULO LIMPIO)
-    const mensaje =
-        `*NUEVO PEDIDO*
+    // 5. Capturar días seleccionados
+    const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
+        .map(el => el.value).join(", ") || "No especificado";
+    
+    // 6. Construcción del mensaje final mejorado
+    const mensaje = `*NUEVO PEDIDO - DEYXPRESS*
 ━━━━━━━━━━━━━━━━━━
-👤 *DATOS PERSONALES*
-• Nombre: ${getVal("nombre")}
-• Celular: ${getVal("telefono")}
-• Email: ${getVal("email")}
+👤 *DATOS CLIENTE*
+• Nombre: ${nombre}
+• Celular: ${telefono}
 
-📍 *DIRECCIÓN DE ENVÍO*
-• Depto: ${getVal("departamento")}
-• Ciudad: ${getVal("ciudad")}
-• Barrio: ${getVal("barrio")}
-• Dir: ${getVal("direccion")}
-• Ref: *${getVal("referencia")}*
+📍 *DIRECCIÓN*
+• Depto: ${departamento}
+• Ciudad: ${ciudad}
+• Barrio: ${barrio}
+• Tipo: ${tipoRes}
+• Dirección: ${direccion}
+• Ref: ${referencia}
 
-🛒 *PRODUCTOS:*
+🛒 *PRODUCTOS*
 ${listaProductos}
-💰 *ESTADO DE PAGO (COD)*
-• ¿Dinero listo?: *${getVal("confirmacionEfectivo")}*
-
-🚚 *DETALLES DE ENTREGA*
-• Tipo: Residencial/Oficina
-• Recibe: recibeTexto
-• Días disponibles: *${diasTexto}*
-• Horario: ${getVal("horario")}
-
-📝 *OBSERVACIONES:* Ninguna
-
-🛡️ *COMPROMISOS:*
-• ¿Dejará dinero?: *${getRadio("p1")}*
-• ¿Pendiente celular?: *${getRadio("p2")}*
-• ¿Entiende pérdida?: *${getRadio("p3")}*
-━━━━━━━━━━━━━━━━━━
 💰 *TOTAL A PAGAR: ${formatter.format(totalPedido)}*
-✅ *PEDIDO VALIDADO*`;
+
+🚚 *ENTREGA*
+• Recibe: ${recibeTexto}
+• Días: ${dias}
+• Horario: ${horario}
+• ¿Dinero listo?: ${efectivo}
+
+🤝 *COMPROMISO*
+• ¿Dejará el dinero?: ${dejaDinero}
+• ¿Estará pendiente?: ${estaraPendiente}
+• ¿Acepta términos?: ${entiendeDevolucion}
+━━━━━━━━━━━━━━━━━━`;
     
+    // 7. Configurar número y abrir WhatsApp
     const fone = "573166093629";
-    const wpUrl = `https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`;
+    window.open(`https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`, '_blank');
     
-    window.open(wpUrl, '_blank');
-    
-    // Reiniciar aplicación
+    // 8. Limpiar el carrito y recargar
     cart = [];
     localStorage.removeItem("cart_deyxpress");
-    updateCart();
-    setTimeout(() => { location.reload(); }, 1000);
+    location.reload();
 });
+
 
 // --- FUNCIONES DE INTERFAZ EXTRAS ---
 

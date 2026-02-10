@@ -211,6 +211,17 @@
                                         <input type="radio" name="quienRecibe" value="Otra persona" onclick="toggleOtraPersona(true)" class="w-5 h-5 text-blue-600 border-gray-300">
                                         <span class="ml-2 text-gray-700">Otra persona</span>
                                     </label>
+                                    <div>
+    <label class="block text-sm font-semibold text-gray-700 mb-2">Tipo de Residencia / Lugar *</label>
+    <select id="tipoResidencia" required class="input-field w-full px-4 py-3 rounded-xl bg-gray-50">
+        <option value="">Seleccione una opción...</option>
+        <option value="Casa">Casa</option>
+        <option value="Apartamento">Apartamento</option>
+        <option value="Local / oficina">Local / oficina</option>
+        <option value="Otro">Otro</option>
+    </select>
+</div>
+
                                 </div>
                             </div>
                             
@@ -237,7 +248,7 @@
                                     <option value="">Seleccione una opción...</option>
                                     <option value="SÍ, tengo el dinero completo">SÍ, tengo el dinero completo</option>
                                     <option value="SÍ, lo tendré listo">SÍ, lo tendré listo para la entrega</option>
-                                    <option value="SÍ, lo tendré listo">Aún no</option>
+                                    <option value="Aún no">Aún no</option>
                                 </select>
                             </div>
                             
