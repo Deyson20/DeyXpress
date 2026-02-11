@@ -110,12 +110,36 @@ function showProductDetail(product) {
     productDetailView.classList.remove("hidden");
     window.scrollTo(0, 0);
     
+    // 1. Manejo de imágenes: Convierte texto con comas en una lista (Array)
+    let imagenes = [];
+    if (Array.isArray(product.images)) {
+        imagenes = product.images;
+    } else {
+        // Si vienen de la DB como texto separado por comas
+        imagenes = product.images ? product.images.split(',').map(img => img.trim()) : [];
+    }
+    
     const desc = product.description ? product.description.replace(/\n/g, '<br>') : 'Sin descripción';
+    
+    // 2. Renderizado del HTML con Galería
     detailContent.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl border shadow-sm">
-      <div class="relative">
-        <img src="${product.images[0]}" class="w-full h-80 object-contain rounded-2xl bg-slate-50">
+      <div class="flex flex-col gap-4">
+        <div class="relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 h-80 flex items-center justify-center">
+            <img id="mainDetailImage" src="${imagenes[0]}" class="w-full h-full object-contain p-4 transition-all duration-300">
+        </div>
+        
+        ${imagenes.length > 1 ? `
+        <div id="thumbGallery" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+            ${imagenes.map((img, index) => `
+                <img src="${img}" 
+                     onclick="document.getElementById('mainDetailImage').src='${img}'; updateThumbUI(this)"
+                     class="thumb-item w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-all ${index === 0 ? 'border-indigo-600' : 'border-transparent'}">
+            `).join('')}
+        </div>
+        ` : ''}
       </div>
+
       <div class="text-left flex flex-col">
         <h2 class="text-2xl font-extrabold text-slate-800">${product.name}</h2>
         <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
@@ -134,10 +158,21 @@ function showProductDetail(product) {
     </div>`;
 }
 
+// 3. FUNCIÓN AUXILIAR (Añádela justo debajo de la anterior)
+window.updateThumbUI = function(selectedThumb) {
+    document.querySelectorAll('.thumb-item').forEach(el => {
+        el.classList.remove('border-indigo-600');
+        el.classList.add('border-transparent');
+    });
+    selectedThumb.classList.add('border-indigo-600');
+    selectedThumb.classList.remove('border-transparent');
+};
+
 function showCatalog() {
     catalogView.classList.remove("hidden");
     productDetailView.classList.add("hidden");
     orderFormView.classList.add("hidden");
+    localStorage.setItem("ultima_vista_deyxpress", "catalogo");
 }
 
 // 6. LÓGICA DEL CARRITO
@@ -217,10 +252,10 @@ window.removeFromCart = function(index) {
 
 function comprarDirecto(productId) {
     const p = productos.find(item => item.id == productId);
-if (!p) return;
-cart = [{ ...p, qty: 1 }];
-updateCart();
-confirmOrder();
+    if (!p) return;
+    cart = [{ ...p, qty: 1 }];
+    updateCart();
+    confirmOrder();
 }
 
 function comprarDirectoDesdeDetail() {
@@ -289,6 +324,7 @@ window.confirmOrder = function() {
     if (cartSidebar) cartSidebar.classList.add("translate-x-full");
     
     window.scrollTo(0, 0);
+    localStorage.setItem("ultima_vista_deyxpress", "formulario");
 };
 
 window.toggleCategoriesMenu = function() {
@@ -359,6 +395,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     const nombre = document.getElementById("nombre").value;
     const telefono = document.getElementById("telefono").value;
     const departamento = document.getElementById("departamento").value; // Agregado
+    const email = document.getElementById("email").value || "No proporcionado";
     const ciudad = document.getElementById("ciudad").value;
     const barrio = document.getElementById("barrio").value;
     const tipoRes = document.getElementById("tipoResidencia").value;
@@ -379,9 +416,10 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     if (quienRecibeOpcion === "Otra persona") {
         const nombreOtro = document.getElementById("nombreOtro").value;
         const telOtro = document.getElementById("telOtro").value;
-        recibeTexto = `Otra persona: ${nombreOtro} (Tel: ${telOtro})`;
+        const emailOtro = document.getElementById("emailOtro").value || "No proporcionado";
+        recibeTexto = `Otra persona: ${nombreOtro} (Tel: ${telOtro}\n• Email: ${emailOtro}`;
     } else {
-        recibeTexto = "El cliente personalmente";
+        recibeTexto = "El cliente person almente";
     }
     
     // 5. Capturar días seleccionados
@@ -394,6 +432,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
 👤 *DATOS CLIENTE*
 • Nombre: ${nombre}
 • Celular: ${telefono}
+• Email: ${email}
 
 📍 *DIRECCIÓN*
 • Depto: ${departamento}
@@ -422,11 +461,24 @@ ${listaProductos}
     // 7. Configurar número y abrir WhatsApp
     const fone = "573166093629";
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`, '_blank');
-    
-    // 8. Limpiar el carrito y recargar
-    cart = [];
-    localStorage.removeItem("cart_deyxpress");
-    location.reload();
+    setTimeout(() => {
+        // En lugar de borrar de una vez, preguntamos:
+        const deseaLimpiar = confirm("¿Deseas vaciar el carrito y volver al inicio?");
+        
+        if (deseaLimpiar) {
+            // 8. Limpiar el carrito y recargar
+            cart = [];
+            localStorage.removeItem("cart_deyxpress");
+            localStorage.removeItem("datos_cliente_deyxpress");
+            location.reload();
+        } else {
+            // Si el cliente dice que NO (porque quiere reenviar el correo de la otra persona, por ejemplo)
+            // Solo lo mandamos al catálogo pero mantenemos sus productos.
+            orderFormView.classList.add("hidden");
+            catalogView.classList.remove("hidden");
+            window.scrollTo(0, 0);
+        }
+    }, 1000); // Le damos 1 segundo para que WhatsApp respire
 });
 
 
@@ -531,7 +583,7 @@ window.addEventListener('load', () => {
                 if (existe) {
                     showProductDetail(existe);
                     // Actualizamos meta tags visuales para el usuario
-                    if(document.getElementById('meta-image')) 
+                    if (document.getElementById('meta-image'))
                         document.getElementById('meta-image').src = existe.images[0];
                     
                     window.history.replaceState({}, document.title, window.location.pathname);
@@ -564,3 +616,101 @@ window.shareProduct = function(id) {
         alert("¡Enlace del producto copiado al portapapeles!");
     }
 };
+
+// --- SISTEMA DE PERSISTENCIA TOTAL DEY XPRESS ---
+
+const guardarProgresoFormulario = () => {
+    const datosDeyxpress = {
+        // Campos de texto y selects
+        nombre: document.getElementById("nombre")?.value,
+        telefono: document.getElementById("telefono")?.value,
+        departamento: document.getElementById("departamento")?.value,
+        email: document.getElementById("email")?.value,
+        ciudad: document.getElementById("ciudad")?.value,
+        barrio: document.getElementById("barrio")?.value,
+        tipoResidencia: document.getElementById("tipoResidencia")?.value,
+        direccion: document.getElementById("direccion")?.value,
+        referencia: document.getElementById("referencia")?.value,
+        horario: document.getElementById("horario")?.value,
+        confirmacionEfectivo: document.getElementById("confirmacionEfectivo")?.value,
+        nombreOtro: document.getElementById("nombreOtro")?.value,
+        telOtro: document.getElementById("telOtro")?.value,
+        emailOtro: document.getElementById("emailOtro")?.value,
+        
+        // Radio buttons (quién recibe y compromiso)
+        quienRecibe: document.querySelector('input[name="quienRecibe"]:checked')?.value,
+        p1: document.querySelector('input[name="p1"]:checked')?.value,
+        p2: document.querySelector('input[name="p2"]:checked')?.value,
+        p3: document.querySelector('input[name="p3"]:checked')?.value,
+        
+        // Checkboxes (días)
+        dias: Array.from(document.querySelectorAll('input[name="dias"]:checked')).map(el => el.value)
+    };
+    localStorage.setItem("datos_cliente_deyxpress", JSON.stringify(datosDeyxpress));
+};
+
+// Escuchar cambios en cualquier parte del formulario
+document.addEventListener("change", guardarProgresoFormulario);
+document.addEventListener("input", guardarProgresoFormulario);
+
+// Función para restaurar todo al cargar la página
+function restaurarFormulario() {
+    const data = JSON.parse(localStorage.getItem("datos_cliente_deyxpress"));
+    if (!data) return;
+    
+    // Restaurar textos y selects
+    const campos = ["nombre", "telefono", "departamento", "email", "ciudad", "barrio",
+        "tipoResidencia", "direccion", "referencia", "horario",
+        "confirmacionEfectivo", "nombreOtro", "telOtro", "emailOtro"
+    ];
+    
+    campos.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && data[id]) el.value = data[id];
+    });
+    
+    // Restaurar Radio Buttons
+    const radios = ["quienRecibe", "p1", "p2", "p3"];
+    radios.forEach(name => {
+        if (data[name]) {
+            const radio = document.querySelector(`input[name="${name}"][value="${data[name]}"]`);
+            if (radio) radio.checked = true;
+        }
+    });
+    
+    // Restaurar Checkboxes (Días)
+    if (data.dias) {
+        data.dias.forEach(valor => {
+            const check = document.querySelector(`input[name="dias"][value="${valor}"]`);
+            if (check) check.checked = true;
+        });
+    }
+    
+    // Disparar lógica visual (por si "Otra persona" estaba marcado)
+    if (data.quienRecibe === "Otra persona") {
+        document.getElementById("camposOtraPersona")?.classList.remove("hidden");
+    }
+}
+
+// Ejecutar al cargar la web
+// --- EVENTO PRINCIPAL DE CARGA ---
+window.addEventListener("DOMContentLoaded", () => {
+    // 1. Restauramos los textos y selecciones del formulario
+    restaurarFormulario();
+    
+    // 2. Revisamos en qué vista se quedó el cliente
+    const ultimaVista = localStorage.getItem("ultima_vista_deyxpress");
+    
+    // 3. Lógica de redirección automática
+    if (ultimaVista === "formulario" && cart.length > 0) {
+        // Si el cliente estaba llenando el pago y tiene productos, lo llevamos allá
+        if (typeof window.confirmOrder === 'function') {
+            window.confirmOrder();
+        }
+    } else {
+        // Si no, aseguramos que vea el catálogo
+        if (typeof window.showCatalog === 'function') {
+            window.showCatalog();
+        }
+    }
+});
