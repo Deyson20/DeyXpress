@@ -75,7 +75,9 @@ function renderProducts(filterTerm = "") {
         div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
         div.innerHTML = `
       <img src="${p.images[0]}" class="h-40 w-full object-contain mb-3">
-      <h3 class="font-bold text-sm h-10 line-clamp-2">${p.name}</h3>
+      <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
+    ${p.name}
+</h3>
       <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
       
       <div class="mt-auto space-y-2 pt-3">
@@ -141,7 +143,9 @@ function showProductDetail(product) {
       </div>
 
       <div class="text-left flex flex-col">
-        <h2 class="text-2xl font-extrabold text-slate-800">${product.name}</h2>
+        <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 break-words leading-tight" style="hyphens: auto; -webkit-hyphens: auto;">
+    ${product.name}
+</h2>
         <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
         <div class="space-y-3">
@@ -180,9 +184,26 @@ function updateCart() {
     localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
     if (!cartItems) return;
     
+     if (cart.length === 0) {
+        cartItems.innerHTML = `
+            <div class="flex flex-col items-center justify-center py-12 text-slate-400">
+                <i class="fas fa-shopping-basket text-4xl mb-4"></i>
+                <p class="font-medium">Tu carrito está vacío</p>
+                <button onclick="toggleCart()" class="mt-4 text-indigo-600 text-sm font-bold uppercase">
+                    Explorar productos
+                </button>
+            </div>
+        `;
+        cartTotal.textContent = formatter.format(0);
+        cartCounter.classList.add("hidden");
+        return; // Detenemos la ejecución aquí porque no hay nada que listar
+    }
+    
     cartItems.innerHTML = "";
     let total = 0;
     let count = 0;
+    
+   
     
     cart.forEach((item, index) => {
         total += item.price * item.qty;
