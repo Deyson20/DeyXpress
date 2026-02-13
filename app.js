@@ -74,7 +74,9 @@ function renderProducts(filterTerm = "") {
         const div = document.createElement("div");
         div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
         div.innerHTML = `
-      <img src="${p.images[0]}" class="h-40 w-full object-contain mb-3">
+      <img src="${p.images[0]}" 
+     onerror="this.src='https://placehold.co/400x400/e2e8f0/64748b?text=PRODUCTO+AGOTADO'; this.onerror=null;" 
+     class="h-40 w-full object-contain mb-3">
       <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
     ${p.name}
 </h3>
@@ -128,13 +130,16 @@ function showProductDetail(product) {
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl border shadow-sm">
       <div class="flex flex-col gap-4">
         <div class="relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 h-80 flex items-center justify-center">
-            <img id="mainDetailImage" src="${imagenes[0]}" class="w-full h-full object-contain p-4 transition-all duration-300">
+            <img id="mainDetailImage" src="${imagenes[0]}" 
+     onerror="this.src='https://placehold.co/600x600/e2e8f0/64748b?text=IMAGEN+NO+DISPONIBLE'; this.onerror=null;" 
+     class="w-full h-full object-contain p-4 transition-all duration-300">
         </div>
         
         ${imagenes.length > 1 ? `
         <div id="thumbGallery" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             ${imagenes.map((img, index) => `
                 <img src="${img}" 
+                onerror="this.src='https://placehold.co/200x200/e2e8f0/64748b?text=N/A'; this.onerror=null;"
                      onclick="document.getElementById('mainDetailImage').src='${img}'; updateThumbUI(this)"
                      class="thumb-item w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-all ${index === 0 ? 'border-indigo-600' : 'border-transparent'}">
             `).join('')}
@@ -184,7 +189,7 @@ function updateCart() {
     localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
     if (!cartItems) return;
     
-     if (cart.length === 0) {
+    if (cart.length === 0) {
         cartItems.innerHTML = `
             <div class="flex flex-col items-center justify-center py-12 text-slate-400">
                 <i class="fas fa-shopping-basket text-4xl mb-4"></i>
@@ -203,7 +208,7 @@ function updateCart() {
     let total = 0;
     let count = 0;
     
-   
+    
     
     cart.forEach((item, index) => {
         total += item.price * item.qty;
@@ -413,6 +418,12 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     });
     
     // 2. Capturar los valores del formulario
+    // ... (Aquí capturas todas tus variables: nombre, ciudad, barrio, compromiso, etc.)
+    
+
+
+    
+    
     const nombre = document.getElementById("nombre").value;
     const telefono = document.getElementById("telefono").value;
     const departamento = document.getElementById("departamento").value; // Agregado
@@ -446,6 +457,21 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     // 5. Capturar días seleccionados
     const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
         .map(el => el.value).join(", ") || "No especificado";
+        
+       // 5. ENVIAR A GOOGLE SHEETS (Respaldo)
+    const infoParaSheets = {
+        nombre, telefono, departamento, email, ciudad, barrio,
+        tipoRes, direccion, referencia, horario, efectivo,
+        dejaDinero, estaraPendiente, entiendeDevolucion, recibeTexto, dias,
+        productos: cart.map(item => `${item.name} (x${item.qty})`).join(", "),
+        total: totalPedido
+    };
+    
+    // Llamada segura a la función del otro archivo
+    if (typeof enviarAGoogleSheets === 'function') {
+        enviarAGoogleSheets(infoParaSheets);
+    }
+        
     
     // 6. Construcción del mensaje final mejorado
     const mensaje = `*NUEVO PEDIDO - DEYXPRESS*
@@ -499,7 +525,7 @@ ${listaProductos}
             catalogView.classList.remove("hidden");
             window.scrollTo(0, 0);
         }
-    }, 1000); // Le damos 1 segundo para que WhatsApp respire
+    }, 2000); // Le damos 2 segundo para que WhatsApp respire
 });
 
 
