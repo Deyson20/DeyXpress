@@ -451,7 +451,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
         const emailOtro = document.getElementById("emailOtro").value || "No proporcionado";
         recibeTexto = `Otra persona: ${nombreOtro} (Tel: ${telOtro}\n• Email: ${emailOtro}`;
     } else {
-        recibeTexto = "El cliente person almente";
+        recibeTexto = "El cliente personalmente";
     }
     
     // 5. Capturar días seleccionados
