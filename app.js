@@ -21,28 +21,29 @@ let cart = JSON.parse(localStorage.getItem("cart_deyxpress")) || [];
 let currentProduct = null;
 let currentCategory = "Todos";
 let productos = [];
+let scrollPosition = 0; // Esta variable recordará dónde estabas
 
 // 4. FUNCIONES DE RENDERIZADO
 function loadCategories() {
     if (!categoriesMenuList) return;
     const cats = ["Todos", ...new Set(productos.map(p => p.category))];
     categoriesMenuList.innerHTML = "";
-    
+
     cats.forEach(cat => {
         const btn = document.createElement("button");
         btn.textContent = cat;
         btn.className = "text-left px-4 py-2 rounded-lg font-semibold hover:bg-indigo-100 transition capitalize";
-        
+
         btn.onclick = () => {
             currentCategory = cat;
             const titleEl = document.getElementById("categoryTitle");
             const subtitleEl = document.getElementById("categorySubtitle");
-            
+
             if (titleEl) titleEl.textContent = cat === "Todos" ? "Todos los productos" : cat;
             if (subtitleEl) {
                 subtitleEl.textContent = cat === "Todos" ? "Explora nuestro catálogo completo" : `Artículos de la categoría ${cat}`;
             }
-            
+
             showCatalog();
             renderProducts();
             if (typeof toggleCategoriesMenu === "function") toggleCategoriesMenu();
@@ -60,16 +61,16 @@ function renderProducts(filterTerm = "") {
         titleEl.textContent = currentCategory === "Todos" ? "Todos los productos" : currentCategory;
     }
     grid.innerHTML = "";
-    
+
     const filtered = productos
         .filter(p => (currentCategory === "Todos" || p.category === currentCategory))
         .filter(p => p.name.toLowerCase().includes(filterTerm.toLowerCase()));
-    
+
     if (filtered.length === 0) {
         grid.innerHTML = `<div class="col-span-full py-20 text-center"><p class="text-slate-500">No se encontraron productos.</p></div>`;
         return;
     }
-    
+
     filtered.forEach(p => {
         const div = document.createElement("div");
         div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
@@ -102,18 +103,20 @@ function renderProducts(filterTerm = "") {
     });
 }
 
-window.verDetalleDesdeString = function(id) {
+window.verDetalleDesdeString = function (id) {
     const p = productos.find(prod => prod.id == id);
     if (p) showProductDetail(p);
 }
 
 // 5. NAVEGACIÓN DE VISTAS
 function showProductDetail(product) {
+    scrollPosition = window.scrollY;
     currentProduct = product;
     catalogView.classList.add("hidden");
     productDetailView.classList.remove("hidden");
     window.scrollTo(0, 0);
-    
+
+
     // 1. Manejo de imágenes: Convierte texto con comas en una lista (Array)
     let imagenes = [];
     if (Array.isArray(product.images)) {
@@ -122,9 +125,9 @@ function showProductDetail(product) {
         // Si vienen de la DB como texto separado por comas
         imagenes = product.images ? product.images.split(',').map(img => img.trim()) : [];
     }
-    
+
     const desc = product.description ? product.description.replace(/\n/g, '<br>') : 'Sin descripción';
-    
+
     // 2. Renderizado del HTML con Galería
     detailContent.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl border shadow-sm">
@@ -168,7 +171,7 @@ function showProductDetail(product) {
 }
 
 // 3. FUNCIÓN AUXILIAR (Añádela justo debajo de la anterior)
-window.updateThumbUI = function(selectedThumb) {
+window.updateThumbUI = function (selectedThumb) {
     document.querySelectorAll('.thumb-item').forEach(el => {
         el.classList.remove('border-indigo-600');
         el.classList.add('border-transparent');
@@ -182,13 +185,19 @@ function showCatalog() {
     productDetailView.classList.add("hidden");
     orderFormView.classList.add("hidden");
     localStorage.setItem("ultima_vista_deyxpress", "catalogo");
+    setTimeout(() => {
+        window.scrollTo({
+            top: scrollPosition,
+            behavior: 'instant'
+        });
+    }, 10); // Usamos un pequeño retraso para asegurar que la vista ya es visible
 }
 
 // 6. LÓGICA DEL CARRITO
 function updateCart() {
     localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
     if (!cartItems) return;
-    
+
     if (cart.length === 0) {
         cartItems.innerHTML = `
             <div class="flex flex-col items-center justify-center py-12 text-slate-400">
@@ -203,13 +212,13 @@ function updateCart() {
         cartCounter.classList.add("hidden");
         return; // Detenemos la ejecución aquí porque no hay nada que listar
     }
-    
+
     cartItems.innerHTML = "";
     let total = 0;
     let count = 0;
-    
-    
-    
+
+
+
     cart.forEach((item, index) => {
         total += item.price * item.qty;
         count += item.qty;
@@ -230,24 +239,24 @@ function updateCart() {
         `;
         cartItems.appendChild(div);
     });
-    
+
     if (cartTotal) cartTotal.textContent = formatter.format(total);
     if (cartCounter) cartCounter.textContent = count;
 }
 
-window.addToCart = function(productId, btnElement = null) {
+window.addToCart = function (productId, btnElement = null) {
     const p = productos.find(item => item.id == productId);
     if (!p) return;
-    
+
     const existingIndex = cart.findIndex(item => item.id == productId);
     if (existingIndex !== -1) {
         cart[existingIndex].qty++;
     } else {
         cart.push({ ...p, qty: 1 });
     }
-    
+
     updateCart();
-    
+
     // Feedback visual en el botón
     if (btnElement) {
         const originalText = btnElement.innerHTML;
@@ -258,12 +267,12 @@ window.addToCart = function(productId, btnElement = null) {
             btnElement.classList.remove("bg-green-50", "text-green-600", "border-green-200");
         }, 1500);
     }
-    
+
     // Abrir carrito automáticamente
     if (cartSidebar) cartSidebar.classList.remove("translate-x-full");
 };
 
-window.changeQty = function(index, delta) {
+window.changeQty = function (index, delta) {
     if (cart[index]) {
         cart[index].qty += delta;
         if (cart[index].qty < 1) removeFromCart(index);
@@ -271,7 +280,7 @@ window.changeQty = function(index, delta) {
     }
 };
 
-window.removeFromCart = function(index) {
+window.removeFromCart = function (index) {
     cart.splice(index, 1);
     updateCart();
 };
@@ -302,7 +311,7 @@ async function iniciarTiendaConDB() {
         const arrayBuffer = await response.arrayBuffer();
         const db = new SQL.Database(new Uint8Array(arrayBuffer));
         const res = db.exec("SELECT * FROM productos");
-        
+
         if (res.length > 0) {
             const columnas = res[0].columns;
             const filas = res[0].values;
@@ -326,34 +335,34 @@ async function iniciarTiendaConDB() {
 document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
 
 // 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL )
-window.showProduct = function(id) {
+window.showProduct = function (id) {
     const p = productos.find(prod => prod.id == id);
     if (p) {
         showProductDetail(p); // Llama a tu función real
     }
 };
 
-window.toggleCart = function() {
+window.toggleCart = function () {
     if (!cartSidebar) return;
     cartSidebar.classList.toggle("translate-x-full");
     if (!cartSidebar.classList.contains("translate-x-full")) {
         history.pushState({ view: history.state?.view || 'catalog', panel: 'cart' }, "");
     }
 };
-window.confirmOrder = function() {
+window.confirmOrder = function () {
     // Ocultamos catálogo y detalle, mostramos formulario
     catalogView.classList.add("hidden");
     productDetailView.classList.add("hidden");
     orderFormView.classList.remove("hidden");
-    
+
     // Cerramos el carrito lateral si está abierto
     if (cartSidebar) cartSidebar.classList.add("translate-x-full");
-    
+
     window.scrollTo(0, 0);
     localStorage.setItem("ultima_vista_deyxpress", "formulario");
 };
 
-window.toggleCategoriesMenu = function() {
+window.toggleCategoriesMenu = function () {
     const menu = document.getElementById("categoriesMenu");
     if (!menu) return;
     menu.classList.toggle("hidden");
@@ -362,7 +371,7 @@ window.toggleCategoriesMenu = function() {
     }
 };
 
-window.closeOrderForm = function() {
+window.closeOrderForm = function () {
     if (history.state?.view === 'order') history.back();
     else {
         orderFormView.classList.add("hidden");
@@ -370,11 +379,11 @@ window.closeOrderForm = function() {
     }
 };
 
-window.onpopstate = function(event) {
+window.onpopstate = function (event) {
     const menu = document.getElementById("categoriesMenu");
     if (menu && !menu.classList.contains("hidden")) { menu.classList.add("hidden"); return; }
     if (cartSidebar && !cartSidebar.classList.contains("translate-x-full")) { cartSidebar.classList.add("translate-x-full"); return; }
-    
+
     if (event.state) {
         const view = event.state.view;
         if (view === 'catalog') showCatalog(false);
@@ -384,19 +393,19 @@ window.onpopstate = function(event) {
 };
 
 const _originalShowProductDetail = showProductDetail;
-showProductDetail = function(product, push = true) {
+showProductDetail = function (product, push = true) {
     _originalShowProductDetail(product);
     if (push) history.pushState({ view: 'detail', product: product }, "");
 };
 
 const _originalShowCatalog = showCatalog;
-showCatalog = function(push = true) {
+showCatalog = function (push = true) {
     _originalShowCatalog();
     if (push) history.pushState({ view: 'catalog' }, "");
 };
 
 const _originalConfirmOrder = confirmOrder;
-confirmOrder = function(push = true) {
+confirmOrder = function (push = true) {
     _originalConfirmOrder();
     if (push) history.pushState({ view: 'order' }, "");
 };
@@ -404,11 +413,11 @@ confirmOrder = function(push = true) {
 history.replaceState({ view: 'catalog' }, "");
 
 // 9. WHATSAPP FORM - CON CAMPOS COMPLETOS
-document.getElementById("orderForm")?.addEventListener("submit", function(e) {
+document.getElementById("orderForm")?.addEventListener("submit", function (e) {
     e.preventDefault();
-    
+
     if (cart.length === 0) return alert("El carrito está vacío");
-    
+
     // 1. Recopilar los productos del carrito
     let listaProductos = "";
     let totalPedido = 0;
@@ -416,14 +425,14 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
         totalPedido += (item.price * item.qty);
         listaProductos += `• ${item.name} (x${item.qty})\n`;
     });
-    
+
     // 2. Capturar los valores del formulario
     // ... (Aquí capturas todas tus variables: nombre, ciudad, barrio, compromiso, etc.)
-    
 
 
-    
-    
+
+
+
     const nombre = document.getElementById("nombre").value;
     const telefono = document.getElementById("telefono").value;
     const departamento = document.getElementById("departamento").value; // Agregado
@@ -435,16 +444,16 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     const referencia = document.getElementById("referencia").value;
     const horario = document.getElementById("horario").value;
     const efectivo = document.getElementById("confirmacionEfectivo").value;
-    
+
     // 3. Capturar campos de Compromiso (Nuevos)
     const dejaDinero = document.querySelector('input[name="p1"]:checked')?.value || "No especificado";
     const estaraPendiente = document.querySelector('input[name="p2"]:checked')?.value || "No especificado";
     const entiendeDevolucion = document.querySelector('input[name="p3"]:checked')?.value || "No especificado";
-    
+
     // 4. Lógica para determinar quién recibe
     const quienRecibeOpcion = document.querySelector('input[name="quienRecibe"]:checked')?.value;
     let recibeTexto = "";
-    
+
     if (quienRecibeOpcion === "Otra persona") {
         const nombreOtro = document.getElementById("nombreOtro").value;
         const telOtro = document.getElementById("telOtro").value;
@@ -453,12 +462,12 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     } else {
         recibeTexto = "El cliente personalmente";
     }
-    
+
     // 5. Capturar días seleccionados
     const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
         .map(el => el.value).join(", ") || "No especificado";
-        
-       // 5. ENVIAR A GOOGLE SHEETS (Respaldo)
+
+    // 5. ENVIAR A GOOGLE SHEETS (Respaldo)
     const infoParaSheets = {
         nombre, telefono, departamento, email, ciudad, barrio,
         tipoRes, direccion, referencia, horario, efectivo,
@@ -466,13 +475,13 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
         productos: cart.map(item => `${item.name} (x${item.qty})`).join(", "),
         total: totalPedido
     };
-    
+
     // Llamada segura a la función del otro archivo
     if (typeof enviarAGoogleSheets === 'function') {
         enviarAGoogleSheets(infoParaSheets);
     }
-        
-    
+
+
     // 6. Construcción del mensaje final mejorado
     const mensaje = `*NUEVO PEDIDO - DEYXPRESS*
 ━━━━━━━━━━━━━━━━━━
@@ -504,14 +513,14 @@ ${listaProductos}
 • ¿Estará pendiente?: ${estaraPendiente}
 • ¿Acepta términos?: ${entiendeDevolucion}
 ━━━━━━━━━━━━━━━━━━`;
-    
+
     // 7. Configurar número y abrir WhatsApp
     const fone = "573166093629";
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`, '_blank');
     setTimeout(() => {
         // En lugar de borrar de una vez, preguntamos:
         const deseaLimpiar = confirm("¿Deseas vaciar el carrito y volver al inicio?");
-        
+
         if (deseaLimpiar) {
             // 8. Limpiar el carrito y recargar
             cart = [];
@@ -531,7 +540,7 @@ ${listaProductos}
 
 // --- FUNCIONES DE INTERFAZ EXTRAS ---
 
-window.toggleMobileSearch = function() {
+window.toggleMobileSearch = function () {
     const c = document.getElementById("mobileSearchContainer");
     if (c) {
         c.classList.toggle("hidden");
@@ -539,7 +548,7 @@ window.toggleMobileSearch = function() {
     }
 };
 
-window.toggleOtraPersona = function(s) {
+window.toggleOtraPersona = function (s) {
     const f = document.getElementById("otraPersonaFields");
     if (f) {
         f.classList.toggle("hidden-section", !s);
@@ -549,20 +558,20 @@ window.toggleOtraPersona = function(s) {
 
 // --- FUNCIONALIDAD DEL BUSCADOR (BOTÓN LUPA Y ENTER) ---
 
-window.ejecutarBusqueda = function() {
+window.ejecutarBusqueda = function () {
     // Detectamos cuál buscador tiene texto (Escritorio o Móvil)
     const term = (document.getElementById("searchInput").value ||
         document.getElementById("searchInputMobile").value || "").toLowerCase();
-    
+
     // Ejecutamos el renderizado con el filtro
     renderProducts(term);
-    
+
     // Si estamos en móvil y el buscador está abierto, lo cerramos
     const mobileSearchContainer = document.getElementById("mobileSearchContainer");
     if (mobileSearchContainer && !mobileSearchContainer.classList.contains("hidden")) {
         toggleMobileSearch();
     }
-    
+
     // Scroll suave hacia arriba para ver los resultados
     window.scrollTo({ top: 0, behavior: 'smooth' });
 };
@@ -577,19 +586,19 @@ window.ejecutarBusqueda = function() {
 });
 
 // --- FUNCIÓN PARA COMPARTIR PRODUCTO ---
-window.compartirProducto = function() {
+window.compartirProducto = function () {
     if (!currentProduct) return;
-    
+
     // Creamos una URL especial que incluye el ID del producto
     // Esto genera algo como: misitio.com/index.html?id=123
     const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentProduct.id}`;
-    
+
     if (navigator.share) {
         navigator.share({
-                title: currentProduct.name,
-                text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
-                url: shareUrl // <--- Enviamos la URL con el ID
-            })
+            title: currentProduct.name,
+            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+            url: shareUrl // <--- Enviamos la URL con el ID
+        })
             .catch((error) => console.log('Error al compartir', error));
     } else {
         navigator.clipboard.writeText(shareUrl);
@@ -601,7 +610,7 @@ window.compartirProducto = function() {
 // --- MODIFICACIÓN EN LA FUNCIÓN QUE MUESTRA EL DETALLE ---
 // Busca tu función showProduct(id) y asegúrate de que actualice el meta-image
 const originalShowProduct = window.showProduct;
-window.showProduct = function(id) {
+window.showProduct = function (id) {
     // Buscamos el producto
     const p = productos.find(x => x.id == id);
     if (p) {
@@ -609,7 +618,7 @@ window.showProduct = function(id) {
         document.getElementById('meta-image').setAttribute('content', p.images[0]);
         document.getElementById('meta-title').setAttribute('content', p.name);
     }
-    
+
     // Llamamos a la función original que ya tenías
     if (typeof originalShowProduct === "function") {
         originalShowProduct(id);
@@ -621,7 +630,7 @@ window.showProduct = function(id) {
 window.addEventListener('load', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('id');
-    
+
     if (productId) {
         const checkProducts = setInterval(() => {
             if (typeof productos !== 'undefined' && productos.length > 0) {
@@ -632,7 +641,7 @@ window.addEventListener('load', () => {
                     // Actualizamos meta tags visuales para el usuario
                     if (document.getElementById('meta-image'))
                         document.getElementById('meta-image').src = existe.images[0];
-                    
+
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
                 clearInterval(checkProducts);
@@ -644,13 +653,13 @@ window.addEventListener('load', () => {
 
 
 // --- FUNCIÓN PARA COMPARTIR ---
-window.shareProduct = function(id) {
+window.shareProduct = function (id) {
     const p = productos.find(x => x.id == id);
     if (!p) return;
-    
+
     // Generamos la URL con el ID del producto
     const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
-    
+
     if (navigator.share) {
         navigator.share({
             title: p.name,
@@ -683,13 +692,13 @@ const guardarProgresoFormulario = () => {
         nombreOtro: document.getElementById("nombreOtro")?.value,
         telOtro: document.getElementById("telOtro")?.value,
         emailOtro: document.getElementById("emailOtro")?.value,
-        
+
         // Radio buttons (quién recibe y compromiso)
         quienRecibe: document.querySelector('input[name="quienRecibe"]:checked')?.value,
         p1: document.querySelector('input[name="p1"]:checked')?.value,
         p2: document.querySelector('input[name="p2"]:checked')?.value,
         p3: document.querySelector('input[name="p3"]:checked')?.value,
-        
+
         // Checkboxes (días)
         dias: Array.from(document.querySelectorAll('input[name="dias"]:checked')).map(el => el.value)
     };
@@ -704,18 +713,18 @@ document.addEventListener("input", guardarProgresoFormulario);
 function restaurarFormulario() {
     const data = JSON.parse(localStorage.getItem("datos_cliente_deyxpress"));
     if (!data) return;
-    
+
     // Restaurar textos y selects
     const campos = ["nombre", "telefono", "departamento", "email", "ciudad", "barrio",
         "tipoResidencia", "direccion", "referencia", "horario",
         "confirmacionEfectivo", "nombreOtro", "telOtro", "emailOtro"
     ];
-    
+
     campos.forEach(id => {
         const el = document.getElementById(id);
         if (el && data[id]) el.value = data[id];
     });
-    
+
     // Restaurar Radio Buttons
     const radios = ["quienRecibe", "p1", "p2", "p3"];
     radios.forEach(name => {
@@ -724,7 +733,7 @@ function restaurarFormulario() {
             if (radio) radio.checked = true;
         }
     });
-    
+
     // Restaurar Checkboxes (Días)
     if (data.dias) {
         data.dias.forEach(valor => {
@@ -732,7 +741,7 @@ function restaurarFormulario() {
             if (check) check.checked = true;
         });
     }
-    
+
     // Disparar lógica visual (por si "Otra persona" estaba marcado)
     if (data.quienRecibe === "Otra persona") {
         document.getElementById("camposOtraPersona")?.classList.remove("hidden");
@@ -744,10 +753,10 @@ function restaurarFormulario() {
 window.addEventListener("DOMContentLoaded", () => {
     // 1. Restauramos los textos y selecciones del formulario
     restaurarFormulario();
-    
+
     // 2. Revisamos en qué vista se quedó el cliente
     const ultimaVista = localStorage.getItem("ultima_vista_deyxpress");
-    
+
     // 3. Lógica de redirección automática
     if (ultimaVista === "formulario" && cart.length > 0) {
         // Si el cliente estaba llenando el pago y tiene productos, lo llevamos allá
