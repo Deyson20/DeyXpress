@@ -20,6 +20,7 @@ const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 
 let cart = JSON.parse(localStorage.getItem("cart_deyxpress")) || [];
 let currentProduct = null;
 let currentCategory = "Todos";
+let selectedVariant = null; // Variable para guardar la opción elegida
 let productos = [];
 let scrollPosition = 0; // Esta variable recordará dónde estabas
 
@@ -112,6 +113,7 @@ window.verDetalleDesdeString = function (id) {
 function showProductDetail(product) {
     scrollPosition = window.scrollY;
     currentProduct = product;
+    selectedVariant = null; // Obligar al cliente a seleccionar manualmente
     catalogView.classList.add("hidden");
     productDetailView.classList.remove("hidden");
     window.scrollTo(0, 0);
@@ -156,12 +158,26 @@ function showProductDetail(product) {
 </h2>
         <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
+        
+        ${product.variants && product.variants.length > 0 ? `
+        <div class="mb-6">
+            <p class="text-sm font-bold text-slate-800 mb-2">Opciones disponibles:</p>
+            <div class="flex flex-wrap gap-2">
+                ${product.variants.map((v, i) => `
+                    <button onclick="selectVariant('${v}', this)" 
+                        class="variant-btn px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-200 text-slate-600 hover:border-indigo-300">
+                        ${v}
+                    </button>
+                `).join('')}
+            </div>
+        </div>` : ''}
+
         <div class="space-y-3">
             <button onclick="comprarDirectoDesdeDetail()" 
                 class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition uppercase tracking-wider">
                 Comprar Ahora
             </button>
-            <button onclick="addToCart('${product.id}', this)" 
+            <button onclick="addToCartFromDetail(this)" 
                 class="w-full bg-white text-indigo-600 py-4 rounded-xl font-bold border-2 border-indigo-600 hover:bg-indigo-50 transition uppercase tracking-wider">
                 Añadir al Carrito
             </button>
@@ -178,6 +194,28 @@ window.updateThumbUI = function (selectedThumb) {
     });
     selectedThumb.classList.add('border-indigo-600');
     selectedThumb.classList.remove('border-transparent');
+};
+
+// 4. FUNCIONES PARA VARIANTES
+window.selectVariant = function(val, btn) {
+    selectedVariant = val;
+    document.querySelectorAll('.variant-btn').forEach(b => {
+        b.className = "variant-btn px-4 py-2 rounded-lg border text-sm font-medium transition-all border-slate-200 text-slate-600 hover:border-indigo-300";
+    });
+    btn.className = "variant-btn px-4 py-2 rounded-lg border text-sm font-medium transition-all border-indigo-600 bg-indigo-50 text-indigo-700";
+};
+
+window.addToCartFromDetail = function(btnElement) {
+    if (!currentProduct) return;
+    
+    // Validar si tiene variantes y no ha seleccionado ninguna
+    if (currentProduct.variants && currentProduct.variants.length > 0 && !selectedVariant) {
+        alert("⚠️ Por favor, selecciona una opción (Color, Talla, etc.) antes de agregar al carrito.");
+        return;
+    }
+
+    // Pasamos la variante seleccionada a la función principal
+    addToCart(currentProduct.id, btnElement, selectedVariant);
 };
 
 function showCatalog() {
@@ -197,6 +235,7 @@ function showCatalog() {
 function updateCart() {
     localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
     if (!cartItems) return;
+    const btnCheckout = document.getElementById("btnCheckout");
 
     if (cart.length === 0) {
         cartItems.innerHTML = `
@@ -209,18 +248,30 @@ function updateCart() {
             </div>
         `;
         cartTotal.textContent = formatter.format(0);
+        if (document.getElementById("cartSubtotal")) document.getElementById("cartSubtotal").textContent = formatter.format(0);
+        if (document.getElementById("cartShipping")) document.getElementById("cartShipping").textContent = formatter.format(0);
         cartCounter.classList.add("hidden");
+        if (btnCheckout) btnCheckout.disabled = true;
+
+        // Si estamos en el formulario y el carrito se vacía, regresar al catálogo automáticamente
+        if (!orderFormView.classList.contains("hidden")) {
+            showCatalog();
+        }
+
         return; // Detenemos la ejecución aquí porque no hay nada que listar
     }
 
+    if (btnCheckout) btnCheckout.disabled = false;
     cartItems.innerHTML = "";
-    let total = 0;
+    let subtotal = 0;
     let count = 0;
+    const bodegasUnicas = new Set(); // Detecta bodegas sin repetir
 
 
 
     cart.forEach((item, index) => {
-        total += item.price * item.qty;
+        subtotal += item.price * item.qty;
+        bodegasUnicas.add(item.origin || "Nacional");
         count += item.qty;
         const div = document.createElement("div");
         div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
@@ -228,6 +279,7 @@ function updateCart() {
           <img src="${item.images[0]}" class="w-12 h-12 object-cover rounded-lg">
           <div class="flex-1">
             <h4 class="text-xs font-bold line-clamp-1">${item.name}</h4>
+            ${item.variant ? `<p class="text-[10px] text-slate-500 bg-slate-100 inline-block px-1 rounded mt-0.5">Opción: ${item.variant}</p>` : ''}
             <p class="text-indigo-600 font-black text-sm">${formatter.format(item.price)}</p>
             <div class="flex items-center gap-2 mt-1">
               <button onclick="changeQty(${index}, -1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">-</button>
@@ -239,20 +291,75 @@ function updateCart() {
         `;
         cartItems.appendChild(div);
     });
+    
+    // Calculamos el flete sumando el costo individual de cada bodega detectada
+    let totalFlete = 0;
+    bodegasUnicas.forEach(origen => totalFlete += obtenerTarifaPorOrigen(origen));
+    
+    const granTotal = subtotal + totalFlete;
 
-    if (cartTotal) cartTotal.textContent = formatter.format(total);
-    if (cartCounter) cartCounter.textContent = count;
+    // Actualizar Subtotal y Envío
+    if (document.getElementById("cartSubtotal")) document.getElementById("cartSubtotal").textContent = formatter.format(subtotal);
+    if (document.getElementById("cartShipping")) document.getElementById("cartShipping").textContent = formatter.format(totalFlete);
+
+    if (cartTotal) cartTotal.textContent = formatter.format(granTotal);
+    if (cartCounter) {
+        cartCounter.textContent = count;
+        cartCounter.classList.remove("hidden");
+    }
+    
+    // Actualizar también el texto del botón de confirmar si es visible
+    const btnConfirmar = document.querySelector("#orderForm button[type='submit']");
+    if(btnConfirmar) btnConfirmar.innerHTML = `<i class="fab fa-whatsapp text-2xl"></i> PEDIR POR WHATSAPP (${formatter.format(granTotal)})`;
 }
 
-window.addToCart = function (productId, btnElement = null) {
+// Función inteligente para calcular tarifa según Origen vs Destino
+function obtenerTarifaPorOrigen(origenBodega) {
+    const depto = document.getElementById("departamento")?.value;
+    
+    // 1. ZONA ESPECIAL (Prioridad Alta: siempre cobra caro a estos destinos)
+    const zonaEspecial = ["Amazonas", "San Andrés y Providencia", "Chocó", "Putumayo", "Guainía", "Vaupés", "Vichada", "Arauca", "Caquetá", "Guaviare", "La Guajira"];
+    if (zonaEspecial.includes(depto)) return 25000;
+
+    // 2. ENVÍO REGIONAL (Si el departamento de la bodega es el mismo que el del cliente)
+    if (origenBodega && origenBodega !== "Nacional" && depto) {
+        if (origenBodega === depto) {
+            return 10000; // Tarifa Regional (Más económica)
+        }
+    }
+
+    // 3. ENVÍO NACIONAL ESTÁNDAR
+    return 12500; 
+}
+
+window.addToCart = function (productId, btnElement = null, variant = null) {
     const p = productos.find(item => item.id == productId);
     if (!p) return;
 
-    const existingIndex = cart.findIndex(item => item.id == productId);
+    // --- AVISO DE BODEGAS DIFERENTES ---
+    if (cart.length > 0) {
+        const bodegasEnCarrito = new Set(cart.map(item => item.origin || "Nacional"));
+        const nuevaBodega = p.origin || "Nacional";
+
+        // Si la nueva bodega no está ya en el carrito, avisamos.
+        if (!bodegasEnCarrito.has(nuevaBodega)) {
+            const continuar = confirm(
+                "⚠️ ¡Atención! Estás agregando un producto de una bodega diferente.\n\n" +
+                "Esto generará un costo de envío adicional por cada bodega distinta.\n\n" +
+                "¿Deseas continuar y agregarlo al carrito?"
+            );
+            // Si el usuario presiona "Cancelar", detenemos todo.
+            if (!continuar) {
+                return; 
+            }
+        }
+    }
+
+    const existingIndex = cart.findIndex(item => item.id == productId && item.variant == variant);
     if (existingIndex !== -1) {
         cart[existingIndex].qty++;
     } else {
-        cart.push({ ...p, qty: 1 });
+        cart.push({ ...p, qty: 1, variant: variant });
     }
 
     updateCart();
@@ -295,7 +402,14 @@ function comprarDirecto(productId) {
 
 function comprarDirectoDesdeDetail() {
     if (!currentProduct) return;
-    cart = [{ ...currentProduct, qty: 1 }];
+
+    // Validar si tiene variantes y no ha seleccionado ninguna
+    if (currentProduct.variants && currentProduct.variants.length > 0 && !selectedVariant) {
+        alert("⚠️ Por favor, selecciona una opción (Color, Talla, etc.) para continuar.");
+        return;
+    }
+
+    cart = [{ ...currentProduct, qty: 1, variant: selectedVariant }];
     updateCart();
     confirmOrder();
 }
@@ -303,6 +417,8 @@ function comprarDirectoDesdeDetail() {
 // 7. MOTOR DB (SQLITE)
 async function iniciarTiendaConDB() {
     try {
+        if (typeof initSqlJs === 'undefined') throw new Error("La librería SQL.js no se ha cargado.");
+
         const SQL = await initSqlJs({
             locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
         });
@@ -310,7 +426,7 @@ async function iniciarTiendaConDB() {
         if (!response.ok) throw new Error("No se encontró tienda.db");
         const arrayBuffer = await response.arrayBuffer();
         const db = new SQL.Database(new Uint8Array(arrayBuffer));
-        const res = db.exec("SELECT * FROM productos");
+        const res = db.exec("SELECT id, name, price, category, description, images, video, variants, origin FROM productos");
 
         if (res.length > 0) {
             const columnas = res[0].columns;
@@ -319,18 +435,36 @@ async function iniciarTiendaConDB() {
                 let obj = {};
                 columnas.forEach((col, i) => {
                     if (col === 'images' || col === 'variants') {
-                        try { obj[col] = JSON.parse(fila[i]); } catch (e) { obj[col] = []; }
+                        const val = fila[i];
+                        try { 
+                            // Intentamos leer como formato JSON
+                            const parsed = JSON.parse(val);
+                            obj[col] = Array.isArray(parsed) ? parsed : [parsed];
+                        } catch (e) { 
+                            // Si falla, intentamos leer como texto separado por comas
+                            obj[col] = (typeof val === 'string' && val.trim().length > 0) 
+                                ? val.split(',').map(s => s.trim()) 
+                                : [];
+                        }
                     } else { obj[col] = fila[i]; }
                 });
                 return obj;
             });
         }
+    } catch (error) { 
+        console.error("❌ Error cargando DB:", error);
+        if (window.location.protocol === 'file:') {
+            alert("⚠️ ATENCIÓN: Para leer la base de datos 'tienda.db', no puedes abrir el archivo directamente. Debes usar un servidor local (como la extensión 'Live Server' en VS Code) o subirlo a un hosting.");
+        }
+        // Si falla la carga, dejamos la lista vacía para no mostrar datos falsos
+        productos = [];
+    } finally {
         loadCategories();
         renderProducts();
         updateCart();
         if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
         if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
-    } catch (error) { console.error("Error:", error); }
+    }
 }
 document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
 
@@ -423,7 +557,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
     let totalPedido = 0;
     cart.forEach(item => {
         totalPedido += (item.price * item.qty);
-        listaProductos += `• ${item.name} (x${item.qty})\n`;
+        listaProductos += `• ${item.name} ${item.variant ? `(${item.variant})` : ''} (x${item.qty})\n`;
     });
 
     // 2. Capturar los valores del formulario
@@ -431,7 +565,12 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
 
 
 
-
+    const bodegasDetectadas = [...new Set(cart.map(p => p.origin || "Nacional"))];
+    let fleteFinal = 0;
+    bodegasDetectadas.forEach(origen => fleteFinal += obtenerTarifaPorOrigen(origen));
+    
+    const subtotalProductos = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const totalConFlete = subtotalProductos + fleteFinal;
 
     const nombre = document.getElementById("nombre").value;
     const telefono = document.getElementById("telefono").value;
@@ -472,7 +611,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
         nombre, telefono, departamento, email, ciudad, barrio,
         tipoRes, direccion, referencia, horario, efectivo,
         dejaDinero, estaraPendiente, entiendeDevolucion, recibeTexto, dias,
-        productos: cart.map(item => `${item.name} (x${item.qty})`).join(", "),
+        productos: cart.map(item => `${item.name} ${item.variant ? `(${item.variant})` : ''} (x${item.qty})`).join(", "),
         total: totalPedido
     };
 
@@ -500,7 +639,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
 
 🛒 *PRODUCTOS*
 ${listaProductos}
-💰 *TOTAL A PAGAR: ${formatter.format(totalPedido)}*
+💰 *TOTAL A PAGAR: ${formatter.format(totalConFlete)}*
 
 🚚 *ENTREGA*
 • Recibe: ${recibeTexto}
@@ -744,7 +883,7 @@ function restaurarFormulario() {
 
     // Disparar lógica visual (por si "Otra persona" estaba marcado)
     if (data.quienRecibe === "Otra persona") {
-        document.getElementById("camposOtraPersona")?.classList.remove("hidden");
+        if (typeof toggleOtraPersona === 'function') toggleOtraPersona(true);
     }
 }
 
