@@ -41,6 +41,10 @@
           </h2>
           <div class="space-y-4">
             <input type="hidden" id="editIndex" value="-1">
+            <div class="space-y-2">
+              <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">ID del Producto (Único)</label>
+              <input id="productId" placeholder="Ej: SKU-001, mi-producto-1" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            </div>
             <input id="name" placeholder="Nombre del producto" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
             <div class="grid grid-cols-2 gap-3">
               <input id="price" type="number" placeholder="Precio" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
@@ -224,9 +228,10 @@
             const img = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/150';
             
             div.innerHTML = `
-                <img src="${img}" class="w-16 h-16 object-cover rounded-xl bg-slate-50">
+                <img src="${img}" onerror="this.src='https://placehold.co/150x150/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;" class="w-16 h-16 object-cover rounded-xl bg-slate-50">
                 <div class="flex-1 min-w-0">
                     <p class="font-bold text-slate-800 truncate text-sm">${p.name}</p>
+                    <p class="text-[10px] text-gray-400 font-mono mt-0.5">ID: ${p.id}</p>
                     <div class="flex flex-col gap-0.5 mt-1">
                         <p class="text-[10px] text-slate-500 uppercase tracking-wider">📍 ${p.origin || "Nacional"}</p>
                         <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">🏢 ${p.bodegaName || "Bodega Principal"}</p>
@@ -243,8 +248,20 @@
 
     function guardarProducto() {
         const idx = parseInt(document.getElementById('editIndex').value);
+        const customId = document.getElementById('productId').value.trim();
+
+        if (!customId) {
+            return alert("El ID del producto es obligatorio y no puede estar vacío.");
+        }
+
+        // Verificar si el ID ya existe en otro producto
+        const idExists = copiaProductos.some((p, i) => String(p.id) === customId && i !== idx);
+        if (idExists) {
+            return alert(`¡Error! El ID "${customId}" ya está en uso. Por favor, elige un ID único.`);
+        }
+
         const data = {
-            id: idx === -1 ? Date.now() : copiaProductos[idx].id,
+            id: customId,
             name: document.getElementById('name').value.trim(),
             price: Number(document.getElementById('price').value),
             category: document.getElementById('category').value.trim() || "General",
@@ -258,8 +275,11 @@
         
         if (!data.name || !data.price) return alert("Nombre y Precio obligatorios");
         
-        if (idx === -1) copiaProductos.push(data);
-        else copiaProductos[idx] = data;
+        if (idx === -1) {
+            copiaProductos.push(data);
+        } else {
+            copiaProductos[idx] = data;
+        }
         
         limpiarFormulario();
         renderAdmin();
@@ -268,6 +288,7 @@
     function cargarParaEditar(index) {
         const p = copiaProductos[index];
         document.getElementById('editIndex').value = index;
+        document.getElementById('productId').value = p.id;
         document.getElementById('name').value = p.name;
         document.getElementById('price').value = p.price;
         document.getElementById('category').value = p.category;
@@ -284,8 +305,8 @@
     }
 
     function limpiarFormulario() {
-        document.getElementById('editIndex').value = "-1";
         document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        document.getElementById('editIndex').value = "-1";
         document.getElementById('btnSave').textContent = "GUARDAR CAMBIOS";
         document.getElementById('btnCancel').classList.add('hidden');
     }
@@ -301,7 +322,7 @@
     const db = new SQL.Database();
 
     // 1. Añadimos la columna 'bodegaName'
-    db.run("CREATE TABLE productos (id INTEGER PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT)");
+    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT)");
 
     // 2. Creamos tabla de configuración para la contraseña
     db.run("CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT)");

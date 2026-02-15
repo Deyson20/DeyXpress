@@ -136,7 +136,7 @@ function showProductDetail(product) {
       <div class="flex flex-col gap-4">
         <div class="relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 h-80 flex items-center justify-center">
             <img id="mainDetailImage" src="${imagenes[0]}" 
-     onerror="this.src='https://placehold.co/600x600/e2e8f0/64748b?text=IMAGEN+NO+DISPONIBLE'; this.onerror=null;" 
+     onerror="this.src='https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO'; this.onerror=null;" 
      class="w-full h-full object-contain p-4 transition-all duration-300">
         </div>
         
@@ -144,7 +144,7 @@ function showProductDetail(product) {
         <div id="thumbGallery" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             ${imagenes.map((img, index) => `
                 <img src="${img}" 
-                onerror="this.src='https://placehold.co/200x200/e2e8f0/64748b?text=N/A'; this.onerror=null;"
+                onerror="this.src='https://placehold.co/200x200/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;"
                      onclick="document.getElementById('mainDetailImage').src='${img}'; updateThumbUI(this)"
                      class="thumb-item w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-all ${index === 0 ? 'border-indigo-600' : 'border-transparent'}">
             `).join('')}
@@ -276,7 +276,7 @@ function updateCart() {
         const div = document.createElement("div");
         div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
         div.innerHTML = `
-          <img src="${item.images[0]}" class="w-12 h-12 object-cover rounded-lg">
+          <img src="${item.images[0]}" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;" class="w-12 h-12 object-cover rounded-lg">
           <div class="flex-1">
             <h4 class="text-xs font-bold line-clamp-1">${item.name}</h4>
             ${item.variant ? `<p class="text-[10px] text-slate-500 bg-slate-100 inline-block px-1 rounded mt-0.5">Opción: ${item.variant}</p>` : ''}
