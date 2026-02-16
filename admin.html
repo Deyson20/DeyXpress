@@ -7,7 +7,24 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.min.js"></script>
+  <!-- Quill Rich Text Editor -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
   <script src="google-sheets.js"></script>
+  <style>
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-bottom: 0;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        min-height: 120px;
+    }
+  </style>
 </head>
 
 <body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
@@ -50,7 +67,13 @@
               <input id="price" type="number" placeholder="Precio" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
               <input id="category" placeholder="Categoría" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
             </div>
-            <input id="video" placeholder="Link YouTube" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            <div class="grid grid-cols-2 gap-3">
+                <input id="video" placeholder="Link YouTube" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+                <select id="shippingStatus" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner font-bold text-slate-600">
+                    <option value="false">🚚 Cobrar Envío</option>
+                    <option value="true">🆓 Envío Gratis</option>
+                </select>
+            </div>
             <div class="grid grid-cols-2 gap-3">
               <div class="space-y-2">
                   <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">Nombre Bodega</label>
@@ -101,8 +124,11 @@
               </div>
             </div>
             <input id="variants" placeholder="Variantes (Rojo, Azul)" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
-            <textarea id="desc" rows="4" placeholder="Descripción" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner text-sm"></textarea>
             <textarea id="imgs" rows="3" placeholder="Links de imágenes (uno por línea)" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner text-xs"></textarea>
+            <div class="space-y-2">
+              <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">Descripción del Producto</label>
+              <div id="editor-container" class="bg-white"></div>
+            </div>
             <button id="btnSave" onclick="guardarProducto()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm">Guardar Cambios</button>
             <button id="btnCancel" onclick="limpiarFormulario()" class="hidden w-full mt-2 bg-slate-100 text-slate-500 font-bold py-2 rounded-xl text-xs">CANCELAR</button>
           </div>
@@ -126,6 +152,7 @@
     const DEFAULT_PASS = "Dey2026*"; 
     let copiaProductos = [];
     let SQL;
+    let quill;
 
     // 1. CARGAR DATOS DE LA DB AL INICIAR
     async function cargarDatosDesdeDB() {
@@ -235,6 +262,7 @@
                     <div class="flex flex-col gap-0.5 mt-1">
                         <p class="text-[10px] text-slate-500 uppercase tracking-wider">📍 ${p.origin || "Nacional"}</p>
                         <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">🏢 ${p.bodegaName || "Bodega Principal"}</p>
+                        ${p.freeShipping === "true" ? '<p class="text-[10px] text-green-500 font-black uppercase tracking-wider">🆓 ENVÍO GRATIS</p>' : ''}
                     </div>
                     <p class="text-xs font-bold text-indigo-600 mt-1">$${Number(p.price).toLocaleString()}</p>
                 </div>
@@ -266,11 +294,12 @@
             price: Number(document.getElementById('price').value),
             category: document.getElementById('category').value.trim() || "General",
             video: document.getElementById('video').value.trim(),
+            freeShipping: document.getElementById('shippingStatus').value,
             bodegaName: document.getElementById('bodegaName').value.trim(),
             origin: document.getElementById('productOrigin').value.trim() || "Nacional",
             variants: document.getElementById('variants').value.split(',').map(v => v.trim()).filter(v => v !== ""),
             images: document.getElementById('imgs').value.split('\n').filter(l => l.trim() !== ""),
-            description: document.getElementById('desc').value
+            description: quill.root.innerHTML
         };
         
         if (!data.name || !data.price) return alert("Nombre y Precio obligatorios");
@@ -293,11 +322,12 @@
         document.getElementById('price').value = p.price;
         document.getElementById('category').value = p.category;
         document.getElementById('video').value = p.video || "";
+        document.getElementById('shippingStatus').value = p.freeShipping || "false";
         document.getElementById('bodegaName').value = p.bodegaName || "";
         document.getElementById('productOrigin').value = p.origin || "";
         document.getElementById('variants').value = p.variants ? p.variants.join(', ') : "";
         document.getElementById('imgs').value = p.images.join('\n');
-        document.getElementById('desc').value = p.description;
+        quill.root.innerHTML = p.description || "";
         
         document.getElementById('btnSave').textContent = "ACTUALIZAR PRODUCTO";
         document.getElementById('btnCancel').classList.remove('hidden');
@@ -306,6 +336,8 @@
 
     function limpiarFormulario() {
         document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        document.getElementById('shippingStatus').value = "false";
+        quill.root.innerHTML = "";
         document.getElementById('editIndex').value = "-1";
         document.getElementById('btnSave').textContent = "GUARDAR CAMBIOS";
         document.getElementById('btnCancel').classList.add('hidden');
@@ -322,18 +354,18 @@
     const db = new SQL.Database();
 
     // 1. Añadimos la columna 'bodegaName'
-    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT)");
+    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT, freeShipping TEXT)");
 
     // 2. Creamos tabla de configuración para la contraseña
     db.run("CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT)");
     db.run("INSERT INTO config VALUES (?, ?)", ['admin_password', 'Dey2026*']);
     db.run("INSERT INTO config VALUES (?, ?)", ['admin_user', 'Deyson20']);
 
-    // 3. IMPORTANTE: Ahora hay 10 signos de interrogación
-    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    // 3. IMPORTANTE: Ahora hay 11 signos de interrogación
+    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
     copiaProductos.forEach(p => {
-        // 4. Pasamos 10 valores en el arreglo.
+        // 4. Pasamos 11 valores en el arreglo.
         stmt.run([
             p.id, 
             p.name, 
@@ -344,7 +376,8 @@
             p.video, 
             JSON.stringify(p.variants),
             p.origin || "Nacional",
-            p.bodegaName || ""
+            p.bodegaName || "",
+            p.freeShipping || "false"
         ]);
     });
     
@@ -355,7 +388,19 @@
     a.download = "tienda.db";
     a.click();
     alert("¡Base de datos generada con sistema de Bodegas! Reemplaza el archivo 'tienda.db' antiguo.");
-}
+  }
+
+  // Inicializar el editor de texto enriquecido
+  quill = new Quill('#editor-container', {
+      theme: 'snow',
+      modules: {
+          toolbar: [
+              ['bold', 'italic', 'underline'],
+              [{ 'color': [] }]
+          ]
+      },
+      placeholder: 'Escribe la descripción del producto aquí...'
+  });
   </script>
 </body>
 </html>

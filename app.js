@@ -82,6 +82,7 @@ function renderProducts(filterTerm = "") {
       <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
     ${p.name}
 </h3>
+      ${p.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded w-fit mb-1">ENVÍO GRATIS</span>' : ''}
       <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
       
       <div class="mt-auto space-y-2 pt-3">
@@ -109,6 +110,31 @@ window.verDetalleDesdeString = function (id) {
     if (p) showProductDetail(p);
 }
 
+// Helper para convertir URL de YouTube a formato de inserción (embed)
+function getYoutubeEmbedUrl(url) {
+    if (!url || typeof url !== 'string') return null;
+    let videoId = null;
+    try {
+        if (url.includes("youtube.com/watch")) {
+            const urlParams = new URLSearchParams(new URL(url).search);
+            videoId = urlParams.get("v");
+        } else if (url.includes("youtube.com/shorts/")) {
+            videoId = url.split("shorts/")[1].split("?")[0];
+        } else if (url.includes("youtu.be/")) {
+            videoId = url.split("youtu.be/")[1].split("?")[0];
+        }
+    } catch (e) {
+        console.error("URL de video no válida:", url, e);
+        return null;
+    }
+    // Parámetros agregados:
+    // rel=0: Al terminar, solo muestra videos TUYOS (no de la competencia).
+    // modestbranding=1: Oculta el logo grande de YouTube.
+    // iv_load_policy=3: Oculta anotaciones y popups molestos.
+    // controls=1: Mantiene los controles de pausa/play.
+    return videoId ? `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3&controls=1` : null;
+}
+
 // 5. NAVEGACIÓN DE VISTAS
 function showProductDetail(product) {
     scrollPosition = window.scrollY;
@@ -128,7 +154,14 @@ function showProductDetail(product) {
         imagenes = product.images ? product.images.split(',').map(img => img.trim()) : [];
     }
 
-    const desc = product.description ? product.description.replace(/\n/g, '<br>') : 'Sin descripción';
+    const desc = product.description || 'Sin descripción';
+    const embedUrl = getYoutubeEmbedUrl(product.video);
+    const videoHtml = embedUrl ? `
+        <div class="mt-4 w-full aspect-video rounded-2xl overflow-hidden border border-slate-200 shadow-sm bg-black">
+            <iframe src="${embedUrl}" class="w-full h-full" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+    ` : '';
+
 
     // 2. Renderizado del HTML con Galería
     detailContent.innerHTML = `
@@ -150,12 +183,14 @@ function showProductDetail(product) {
             `).join('')}
         </div>
         ` : ''}
+        ${videoHtml}
       </div>
 
       <div class="text-left flex flex-col">
         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 break-words leading-tight" style="hyphens: auto; -webkit-hyphens: auto;">
     ${product.name}
 </h2>
+        ${product.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-xs font-black px-3 py-1 rounded-full w-fit mt-2">🚀 ENVÍO GRATIS</span>' : ''}
         <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
         
@@ -271,8 +306,21 @@ function updateCart() {
 
     cart.forEach((item, index) => {
         subtotal += item.price * item.qty;
-        bodegasUnicas.add(item.origin || "Nacional");
+        // Solo cobramos flete si el producto NO tiene envío gratis
+        if (item.freeShipping !== "true") {
+            bodegasUnicas.add(item.origin || "Nacional");
+        }
         count += item.qty;
+
+        // Lógica para mostrar flete individual
+        let shippingDisplay = "";
+        if (item.freeShipping === "true") {
+            shippingDisplay = `<span class="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded">🚀 Envío Gratis</span>`;
+        } else {
+            const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
+            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Flete: ${formatter.format(tarifa)}</span>`;
+        }
+
         const div = document.createElement("div");
         div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
         div.innerHTML = `
@@ -280,7 +328,10 @@ function updateCart() {
           <div class="flex-1">
             <h4 class="text-xs font-bold line-clamp-1">${item.name}</h4>
             ${item.variant ? `<p class="text-[10px] text-slate-500 bg-slate-100 inline-block px-1 rounded mt-0.5">Opción: ${item.variant}</p>` : ''}
-            <p class="text-indigo-600 font-black text-sm">${formatter.format(item.price)}</p>
+            <div class="flex flex-col mt-0.5">
+                <p class="text-indigo-600 font-black text-sm">${formatter.format(item.price)}</p>
+                ${shippingDisplay}
+            </div>
             <div class="flex items-center gap-2 mt-1">
               <button onclick="changeQty(${index}, -1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">-</button>
               <span class="text-xs font-bold">${item.qty}</span>
@@ -426,7 +477,7 @@ async function iniciarTiendaConDB() {
         if (!response.ok) throw new Error("No se encontró tienda.db");
         const arrayBuffer = await response.arrayBuffer();
         const db = new SQL.Database(new Uint8Array(arrayBuffer));
-        const res = db.exec("SELECT id, name, price, category, description, images, video, variants, origin FROM productos");
+        const res = db.exec("SELECT * FROM productos"); // Seleccionamos todo para incluir freeShipping y bodegaName
 
         if (res.length > 0) {
             const columnas = res[0].columns;
