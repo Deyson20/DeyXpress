@@ -160,6 +160,22 @@ function showProductDetail(product) {
     scrollPosition = window.scrollY;
     currentProduct = product;
     selectedVariant = null; // Obligar al cliente a seleccionar manualmente
+    
+    // --- ACTUALIZAR META TAGS PARA COMPARTIR ---
+    if (product) {
+        // 1. Título de la pestaña del navegador
+        document.title = `${product.name} | DEYXPRESS`;
+
+        // 2. Metaetiquetas Open Graph (Para WhatsApp, Facebook, etc.)
+        const metaImg = document.getElementById('meta-image');
+        const metaTitle = document.getElementById('meta-title');
+        const metaDesc = document.getElementById('meta-desc');
+        
+        if (metaImg && product.images && product.images.length > 0) metaImg.setAttribute('content', product.images[0]);
+        if (metaTitle) metaTitle.setAttribute('content', product.name);
+        if (metaDesc) metaDesc.setAttribute('content', `Mira este producto: ${product.name}. Precio: ${formatter.format(product.price)}`);
+    }
+
     catalogView.classList.add("hidden");
     productDetailView.classList.remove("hidden");
     window.scrollTo(0, 0);
@@ -858,7 +874,7 @@ window.compartirProducto = function () {
     if (navigator.share) {
         navigator.share({
             title: currentProduct.name,
-            text: `Mira este producto en DEYXPRESS: ${currentProduct.name}`,
+            text: `Mira este producto en DEYXPRESS: ${currentProduct.name} - ${formatter.format(currentProduct.price)}`,
             url: shareUrl // <--- Enviamos la URL con el ID
         })
             .catch((error) => console.log('Error al compartir', error));
@@ -868,24 +884,6 @@ window.compartirProducto = function () {
     }
 };
 
-
-// --- MODIFICACIÓN EN LA FUNCIÓN QUE MUESTRA EL DETALLE ---
-// Busca tu función showProduct(id) y asegúrate de que actualice el meta-image
-const originalShowProduct = window.showProduct;
-window.showProduct = function (id) {
-    // Buscamos el producto
-    const p = productos.find(x => x.id == id);
-    if (p) {
-        // Cambiamos la imagen de la metaetiqueta inmediatamente
-        document.getElementById('meta-image').setAttribute('content', p.images[0]);
-        document.getElementById('meta-title').setAttribute('content', p.name);
-    }
-
-    // Llamamos a la función original que ya tenías
-    if (typeof originalShowProduct === "function") {
-        originalShowProduct(id);
-    }
-};
 
 
 // --- LÓGICA PARA ABRIR PRODUCTO DESDE LINK ---
@@ -900,9 +898,6 @@ window.addEventListener('load', () => {
                 const existe = productos.find(p => p.id == productId);
                 if (existe) {
                     showProductDetail(existe);
-                    // Actualizamos meta tags visuales para el usuario
-                    if (document.getElementById('meta-image'))
-                        document.getElementById('meta-image').src = existe.images[0];
 
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
