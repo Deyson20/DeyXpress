@@ -864,19 +864,36 @@ window.ejecutarBusqueda = function () {
 });
 
 // --- FUNCIÓN PARA COMPARTIR PRODUCTO ---
-window.compartirProducto = function () {
+window.compartirProducto = async function () {
     if (!currentProduct) return;
 
     // Creamos una URL especial que incluye el ID del producto
     // Esto genera algo como: misitio.com/index.html?id=123
     const shareUrl = `${window.location.origin}${window.location.pathname}?id=${currentProduct.id}`;
+    const shareText = `Mira este producto en DEYXPRESS: ${currentProduct.name} - ${formatter.format(currentProduct.price)}`;
 
+    // INTENTO 1: Compartir IMAGEN + TEXTO (Mejor experiencia en móviles)
+    if (navigator.share && navigator.canShare) {
+        try {
+            if (currentProduct.images && currentProduct.images.length > 0) {
+                const imgUrl = currentProduct.images[0];
+                // Intentamos descargar la imagen para enviarla como archivo real
+                const response = await fetch(imgUrl);
+                const blob = await response.blob();
+                const file = new File([blob], "producto.jpg", { type: blob.type });
+                
+                const dataConArchivo = { title: currentProduct.name, text: shareText + "\n" + shareUrl, files: [file] };
+                if (navigator.canShare(dataConArchivo)) {
+                    await navigator.share(dataConArchivo);
+                    return; // ¡Éxito! Se compartió la imagen real
+                }
+            }
+        } catch (e) { console.warn("Fallback a solo link (CORS o no soportado)", e); }
+    }
+
+    // INTENTO 2: Fallback estándar (Solo link) si falla lo anterior
     if (navigator.share) {
-        navigator.share({
-            title: currentProduct.name,
-            text: `Mira este producto en DEYXPRESS: ${currentProduct.name} - ${formatter.format(currentProduct.price)}`,
-            url: shareUrl // <--- Enviamos la URL con el ID
-        })
+        navigator.share({ title: currentProduct.name, text: shareText, url: shareUrl })
             .catch((error) => console.log('Error al compartir', error));
     } else {
         navigator.clipboard.writeText(shareUrl);
@@ -907,28 +924,6 @@ window.addEventListener('load', () => {
         setTimeout(() => clearInterval(checkProducts), 5000);
     }
 });
-
-
-// --- FUNCIÓN PARA COMPARTIR ---
-window.shareProduct = function (id) {
-    const p = productos.find(x => x.id == id);
-    if (!p) return;
-
-    // Generamos la URL con el ID del producto
-    const shareUrl = `${window.location.origin}${window.location.pathname}?id=${id}`;
-
-    if (navigator.share) {
-        navigator.share({
-            title: p.name,
-            text: `Mira este producto en DEYXPRESS: ${p.name}`,
-            url: shareUrl
-        }).catch((error) => console.log('Error al compartir', error));
-    } else {
-        // Opción para computadoras o navegadores sin "Compartir" nativo
-        navigator.clipboard.writeText(shareUrl);
-        alert("¡Enlace del producto copiado al portapapeles!");
-    }
-};
 
 // --- SISTEMA DE PERSISTENCIA TOTAL DEY XPRESS ---
 
