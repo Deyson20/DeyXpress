@@ -77,7 +77,7 @@ function renderProducts(filterTerm = "") {
         div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
         div.innerHTML = `
       <img src="${p.images[0]}" 
-     onerror="this.src='https://placehold.co/400x400/e2e8f0/64748b?text=PRODUCTO+AGOTADO'; this.onerror=null;" 
+     onerror="handleCatalogError(this)" 
      class="h-40 w-full object-contain mb-3">
       <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
     ${p.name}
@@ -102,6 +102,26 @@ function renderProducts(filterTerm = "") {
     `;
         div.onclick = () => showProductDetail(p);
         grid.appendChild(div);
+
+        // Verificamos si alguna de las imágenes (no solo la primera) está rota
+        checkProductImages(p, div);
+    });
+}
+
+// Función para validar todas las imágenes de un producto en el catálogo
+function checkProductImages(product, cardElement) {
+    if (!product.images || !Array.isArray(product.images)) return;
+    
+    product.images.forEach(url => {
+        const img = new Image();
+        img.src = url;
+        img.onerror = () => {
+            const mainImg = cardElement.querySelector('img');
+            // Si falla alguna imagen y aún no está marcado como agotado, lo marcamos
+            if (mainImg && !mainImg.src.includes('text=PRODUCTO+AGOTADO')) {
+                handleCatalogError(mainImg);
+            }
+        };
     });
 }
 
@@ -169,7 +189,7 @@ function showProductDetail(product) {
       <div class="flex flex-col gap-4">
         <div class="relative bg-slate-50 rounded-2xl overflow-hidden border border-slate-100 h-80 flex items-center justify-center">
             <img id="mainDetailImage" src="${imagenes[0]}" 
-     onerror="this.src='https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO'; this.onerror=null;" 
+     onerror="handleDetailError(this)" 
      class="w-full h-full object-contain p-4 transition-all duration-300">
         </div>
         
@@ -177,7 +197,7 @@ function showProductDetail(product) {
         <div id="thumbGallery" class="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
             ${imagenes.map((img, index) => `
                 <img src="${img}" 
-                onerror="this.src='https://placehold.co/200x200/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;"
+                onerror="handleDetailError(this)"
                      onclick="document.getElementById('mainDetailImage').src='${img}'; updateThumbUI(this)"
                      class="thumb-item w-20 h-20 object-cover rounded-xl cursor-pointer border-2 transition-all ${index === 0 ? 'border-indigo-600' : 'border-transparent'}">
             `).join('')}
@@ -220,6 +240,58 @@ function showProductDetail(product) {
       </div>
     </div>`;
 }
+
+// --- MANEJO DE ERRORES DE IMAGEN Y BLOQUEO DE BOTONES ---
+
+window.handleCatalogError = function(img) {
+    // 1. Poner imagen de Agotado
+    img.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO';
+    img.onerror = null; // Evitar bucle infinito
+
+    // 2. Buscar la tarjeta del producto y deshabilitar botones
+    const card = img.closest('.bg-white');
+    if (card) {
+        const btns = card.querySelectorAll('button');
+        btns.forEach(btn => {
+            const text = btn.innerText.toLowerCase();
+            // Bloqueamos solo los botones de acción de compra
+            if (text.includes('comprar') || text.includes('añadir')) {
+                btn.disabled = true;
+                // Reemplazamos clases para asegurar estilo gris uniforme y sin conflictos
+                btn.className = "py-2 w-full rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed";
+                btn.innerText = "No disponible";
+                btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); };
+            }
+        });
+    }
+};
+
+window.handleDetailError = function(img) {
+    img.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO';
+    img.onerror = null;
+
+    // Si falla cualquier imagen (incluso una miniatura), forzamos la imagen principal a AGOTADO
+    const mainImg = document.getElementById('mainDetailImage');
+    if (mainImg) {
+        mainImg.src = 'https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO';
+    }
+
+    // En la vista de detalle, buscamos los botones dentro del contenedor principal
+    const container = document.getElementById('detailContent');
+    if (container) {
+        const btns = container.querySelectorAll('button');
+        btns.forEach(btn => {
+            const text = btn.innerText.toLowerCase();
+            if (text.includes('comprar') || text.includes('añadir')) {
+                btn.disabled = true;
+                // Reemplazamos clases para asegurar estilo gris uniforme (manteniendo tamaño grande)
+                btn.className = "w-full py-4 rounded-xl font-bold bg-slate-100 text-slate-400 border-2 border-slate-200 cursor-not-allowed uppercase tracking-wider";
+                btn.innerText = "No disponible";
+                btn.onclick = (e) => { e.preventDefault(); e.stopPropagation(); };
+            }
+        });
+    }
+};
 
 // 3. FUNCIÓN AUXILIAR (Añádela justo debajo de la anterior)
 window.updateThumbUI = function (selectedThumb) {
