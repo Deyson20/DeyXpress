@@ -1016,10 +1016,16 @@ window.addEventListener("DOMContentLoaded", () => {
     // 1. Restauramos los textos y selecciones del formulario
     restaurarFormulario();
 
-    // 2. Revisamos en qué vista se quedó el cliente
+    // 2. Verificar si hay un ID en la URL (Link compartido)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('id')) {
+        return; // Detenemos aquí para no sobreescribir la URL con showCatalog()
+    }
+
+    // 3. Revisamos en qué vista se quedó el cliente
     const ultimaVista = localStorage.getItem("ultima_vista_deyxpress");
 
-    // 3. Lógica de redirección automática
+    // 4. Lógica de redirección automática
     if (ultimaVista === "formulario" && cart.length > 0) {
         // Si el cliente estaba llenando el pago y tiene productos, lo llevamos allá
         if (typeof window.confirmOrder === 'function') {
