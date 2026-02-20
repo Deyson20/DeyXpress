@@ -668,19 +668,22 @@ window.onpopstate = function (event) {
 const _originalShowProductDetail = showProductDetail;
 showProductDetail = function (product, push = true) {
     _originalShowProductDetail(product);
-    if (push) history.pushState({ view: 'detail', product: product }, "");
+    if (push) {
+        const newUrl = `?id=${product.id}`;
+        history.pushState({ view: 'detail', product: product }, "", newUrl);
+    }
 };
 
 const _originalShowCatalog = showCatalog;
 showCatalog = function (push = true) {
     _originalShowCatalog();
-    if (push) history.pushState({ view: 'catalog' }, "");
+    if (push) history.pushState({ view: 'catalog' }, "", window.location.pathname);
 };
 
 const _originalConfirmOrder = confirmOrder;
 confirmOrder = function (push = true) {
     _originalConfirmOrder();
-    if (push) history.pushState({ view: 'order' }, "");
+    if (push) history.pushState({ view: 'order' }, "", window.location.pathname);
 };
 
 history.replaceState({ view: 'catalog' }, "");
@@ -914,9 +917,8 @@ window.addEventListener('load', () => {
                 // Buscamos el producto con ==
                 const existe = productos.find(p => p.id == productId);
                 if (existe) {
-                    showProductDetail(existe);
-
-                    window.history.replaceState({}, document.title, window.location.pathname);
+                    showProductDetail(existe, false);
+                    window.history.replaceState({ view: 'detail', product: existe }, document.title, window.location.href);
                 }
                 clearInterval(checkProducts);
             }
