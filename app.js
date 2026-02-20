@@ -173,7 +173,15 @@ function showProductDetail(product) {
         
         if (metaImg && product.images && product.images.length > 0) metaImg.setAttribute('content', product.images[0]);
         if (metaTitle) metaTitle.setAttribute('content', product.name);
-        if (metaDesc) metaDesc.setAttribute('content', `Mira este producto: ${product.name}. Precio: ${formatter.format(product.price)}`);
+        if (metaDesc) {
+            // Creamos un elemento temporal para limpiar el HTML de la descripción
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = product.description || '';
+            const cleanDesc = tempDiv.textContent || tempDiv.innerText || '';
+            // Acortamos la descripción a un tamaño ideal para vistas previas
+            const truncatedDesc = cleanDesc.substring(0, 155) + (cleanDesc.length > 155 ? '...' : '');
+            metaDesc.setAttribute('content', truncatedDesc || `Encuentra ${product.name} y más en DEYXPRESS.`);
+        }
     }
 
     catalogView.classList.add("hidden");
