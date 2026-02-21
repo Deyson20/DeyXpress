@@ -148,7 +148,8 @@
 
   <script>
     // --- CONFIGURACIÓN CLOUDFLARE D1 ---
-    const API_URL = "https://deyxpress.deyson20.workers.dev"; // Ej: https://tienda-api.deyxpress.workers.dev
+    // Aseguramos que la URL no tenga barra al final para evitar errores
+    const API_URL = "https://deyxpress.deyson20.workers.dev".replace(/\/+$/, "");
     
     let copiaProductos = [];
     let quill;
