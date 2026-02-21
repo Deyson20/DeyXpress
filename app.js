@@ -320,7 +320,7 @@ window.handleDetailError = function(img) {
     }
 };
 
-// 3. FUNCIÓN AUXILIAR (Añádela justo debajo de la anterior)
+// 3. FUNCIÓN AUXILIAR PARA LA GALERÍA
 window.updateThumbUI = function (selectedThumb) {
     document.querySelectorAll('.thumb-item').forEach(el => {
         el.classList.remove('border-indigo-600');
