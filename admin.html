@@ -202,7 +202,11 @@
         } catch (e) {
             console.log("Error de conexión:", e);
             document.getElementById('errorMsg').classList.remove('hidden');
-            document.getElementById('errorMsg').textContent = "Error de conexión: " + e.message;
+            if (e.message === "Failed to fetch") {
+                document.getElementById('errorMsg').textContent = "Error: El Worker de Cloudflare falló o rechazó la conexión. Revisa la consola (F12) y la configuración de la DB.";
+            } else {
+                document.getElementById('errorMsg').textContent = "Error de conexión: " + e.message;
+            }
         }
     }
 
