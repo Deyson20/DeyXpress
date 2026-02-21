@@ -6,6 +6,7 @@
   <title>Admin Pro - DEYXPRESS</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.min.js"></script>
   <!-- Quill Rich Text Editor -->
   <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
@@ -44,9 +45,9 @@
         <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Deyxpress Admin</h1>
         <p id="productCount" class="text-indigo-600 font-bold text-xs uppercase">Cargando productos...</p>
       </div>
-      <a href="index.html" target="_blank" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-5 py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-sm">
-        <i class="fas fa-store"></i> VER TIENDA ONLINE
-      </a>
+      <button onclick="descargarArchivo()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black transition-all shadow-lg shadow-green-100 flex items-center gap-2 text-sm">
+        <i class="fas fa-save"></i> GUARDAR Y DESCARGAR DB
+      </button>
     </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -147,33 +148,47 @@
   </div>
 
   <script>
-    // --- CONFIGURACIÓN CLOUDFLARE D1 ---
-    // Aseguramos que la URL no tenga barra al final para evitar errores
-    const API_URL = "https://deyxpress.deyson20.workers.dev".replace(/\/+$/, "");
-    
+    const DEFAULT_USER = "Deyson20";
+    const DEFAULT_PASS = "Dey2026*"; 
     let copiaProductos = [];
+    let SQL;
     let quill;
-    let currentPass = ""; // Guardaremos la contraseña temporalmente para las peticiones
 
-    // 1. CARGAR DATOS DE LA NUBE
-    async function cargarDatosDesdeNube() {
+    // 1. CARGAR DATOS DE LA DB AL INICIAR
+    async function cargarDatosDesdeDB() {
         try {
-            const response = await fetch(`${API_URL}/api/products`);
-            const data = await response.json();
+            if (!SQL) {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+                });
+            }
+            const response = await fetch('tienda.db');
+            if (!response.ok) {
+                console.log("No hay tienda.db previa, empezando de cero.");
+                copiaProductos = [];
+                renderAdmin();
+                return;
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            const db = new SQL.Database(new Uint8Array(arrayBuffer));
+            const res = db.exec("SELECT * FROM productos");
             
-            if (Array.isArray(data)) {
-                copiaProductos = data.map(fila => {
-                    let obj = { ...fila };
-                    // Parsear JSON strings
-                    ['images', 'variants'].forEach(col => {
-                        try { obj[col] = JSON.parse(fila[col]); } catch (e) { obj[col] = []; }
+            if (res.length > 0) {
+                const columnas = res[0].columns;
+                const filas = res[0].values;
+                copiaProductos = filas.map(fila => {
+                    let obj = {};
+                    columnas.forEach((col, i) => {
+                        if (col === 'images' || col === 'variants') {
+                            try { obj[col] = JSON.parse(fila[i]); } catch (e) { obj[col] = []; }
+                        } else { obj[col] = fila[i]; }
                     });
                     return obj;
                 });
             }
             renderAdmin();
         } catch (err) {
-            console.error("Error cargando productos:", err);
+            console.error("Error cargando DB:", err);
             renderAdmin();
         }
     }
@@ -181,32 +196,44 @@
     async function verificarAcceso() {
         const userInput = document.getElementById('adminUser').value;
         const passInput = document.getElementById('adminPass').value;
+        let userReal = DEFAULT_USER;
+        let passReal = DEFAULT_PASS;
 
         try {
-            const res = await fetch(`${API_URL}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user: userInput, pass: passInput })
-            });
+            if (!SQL) {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+                });
+            }
             
-            const data = await res.json();
-
-            if (data.success) {
-                currentPass = passInput; // Guardamos pass para futuras peticiones
-                document.getElementById('loginScreen').classList.add('hidden');
-                document.getElementById('adminContent').classList.remove('hidden');
-                cargarDatosDesdeNube();
-            } else {
-                document.getElementById('errorMsg').classList.remove('hidden');
+            // Intentamos leer la contraseña de la DB si existe
+            const response = await fetch('tienda.db');
+            if (response.ok) {
+                const buffer = await response.arrayBuffer();
+                const tempDb = new SQL.Database(new Uint8Array(buffer));
+                try {
+                    const resPass = tempDb.exec("SELECT value FROM config WHERE key = 'admin_password'");
+                    if (resPass.length > 0 && resPass[0].values.length > 0) {
+                        passReal = resPass[0].values[0][0];
+                    }
+                    const resUser = tempDb.exec("SELECT value FROM config WHERE key = 'admin_user'");
+                    if (resUser.length > 0 && resUser[0].values.length > 0) {
+                        userReal = resUser[0].values[0][0];
+                    }
+                } catch(e) {
+                    console.log("Tabla config no existe aún, usando default.");
+                }
             }
         } catch (e) {
-            console.log("Error de conexión:", e);
+            console.log("Error verificando DB, usando default.");
+        }
+
+        if (userInput === userReal && passInput === passReal) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminContent').classList.remove('hidden');
+            cargarDatosDesdeDB();
+        } else {
             document.getElementById('errorMsg').classList.remove('hidden');
-            if (e.message === "Failed to fetch") {
-                document.getElementById('errorMsg').textContent = "Error: El Worker de Cloudflare falló o rechazó la conexión. Revisa la consola (F12) y la configuración de la DB.";
-            } else {
-                document.getElementById('errorMsg').textContent = "Error de conexión: " + e.message;
-            }
         }
     }
 
@@ -263,7 +290,7 @@
         });
     }
 
-    async function guardarProducto() {
+    function guardarProducto() {
         const idx = parseInt(document.getElementById('editIndex').value);
         const customId = document.getElementById('productId').value.trim();
 
@@ -293,24 +320,14 @@
         
         if (!data.name || !data.price) return alert("Nombre y Precio obligatorios");
         
-        // ENVIAR A LA NUBE
-        try {
-            const res = await fetch(`${API_URL}/api/products`, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-Admin-Pass': currentPass 
-                },
-                body: JSON.stringify(data)
-            });
-            if (!res.ok) throw new Error("Error guardando");
-            
-            alert("✅ Producto guardado en la nube correctamente");
-            limpiarFormulario();
-            cargarDatosDesdeNube(); // Recargar lista
-        } catch (e) {
-            alert("❌ Error al guardar: " + e.message);
+        if (idx === -1) {
+            copiaProductos.push(data);
+        } else {
+            copiaProductos[idx] = data;
         }
+        
+        limpiarFormulario();
+        renderAdmin();
     }
 
     function cargarParaEditar(index) {
@@ -342,20 +359,52 @@
         document.getElementById('btnCancel').classList.add('hidden');
     }
 
-    async function eliminar(index) {
+    function eliminar(index) {
         if (confirm("¿Eliminar este producto?")) {
-            const p = copiaProductos[index];
-            try {
-                await fetch(`${API_URL}/api/products?id=${p.id}`, {
-                    method: 'DELETE',
-                    headers: { 'X-Admin-Pass': currentPass }
-                });
-                cargarDatosDesdeNube();
-            } catch (e) {
-                alert("Error eliminando: " + e.message);
-            }
+            copiaProductos.splice(index, 1);
+            renderAdmin();
         }
     }
+
+    async function descargarArchivo() {
+    const db = new SQL.Database();
+
+    // 1. Añadimos la columna 'bodegaName'
+    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT, freeShipping TEXT)");
+
+    // 2. Creamos tabla de configuración para la contraseña
+    db.run("CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT)");
+    db.run("INSERT INTO config VALUES (?, ?)", ['admin_password', 'Dey2026*']);
+    db.run("INSERT INTO config VALUES (?, ?)", ['admin_user', 'Deyson20']);
+
+    // 3. IMPORTANTE: Ahora hay 11 signos de interrogación
+    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    
+    copiaProductos.forEach(p => {
+        // 4. Pasamos 11 valores en el arreglo.
+        stmt.run([
+            p.id, 
+            p.name, 
+            p.price, 
+            p.category, 
+            p.description, 
+            JSON.stringify(p.images), 
+            p.video, 
+            JSON.stringify(p.variants),
+            p.origin || "Nacional",
+            p.bodegaName || "",
+            p.freeShipping || "false"
+        ]);
+    });
+    
+    const data = db.export();
+    const blob = new Blob([data], { type: "application/octet-stream" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "tienda.db";
+    a.click();
+    alert("¡Base de datos generada con sistema de Bodegas! Reemplaza el archivo 'tienda.db' antiguo.");
+  }
 
   // Inicializar el editor de texto enriquecido
   quill = new Quill('#editor-container', {
