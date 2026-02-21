@@ -17,6 +17,9 @@ const searchInput = document.getElementById("searchInput");
 const searchInputMobile = document.getElementById("searchInputMobile");
 const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
 
+// --- CONFIGURACIÓN CLOUDFLARE D1 ---
+const API_URL = "PON_AQUI_TU_URL_DEL_WORKER"; // Ej: https://tienda-api.deyxpress.workers.dev
+
 let cart = JSON.parse(localStorage.getItem("cart_deyxpress")) || [];
 let currentProduct = null;
 let currentCategory = "Todos";
@@ -561,28 +564,21 @@ function comprarDirectoDesdeDetail() {
     confirmOrder();
 }
 
-// 7. MOTOR DB (SQLITE)
-async function iniciarTiendaConDB() {
+// 7. MOTOR DB (CLOUDFLARE D1)
+async function iniciarTiendaD1() {
     try {
-        if (typeof initSqlJs === 'undefined') throw new Error("La librería SQL.js no se ha cargado.");
-
-        const SQL = await initSqlJs({
-            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
-        });
-        const response = await fetch('tienda.db');
-        if (!response.ok) throw new Error("No se encontró tienda.db");
-        const arrayBuffer = await response.arrayBuffer();
-        const db = new SQL.Database(new Uint8Array(arrayBuffer));
-        const res = db.exec("SELECT * FROM productos"); // Seleccionamos todo para incluir freeShipping y bodegaName
-
-        if (res.length > 0) {
-            const columnas = res[0].columns;
-            const filas = res[0].values;
-            productos = filas.map(fila => {
-                let obj = {};
-                columnas.forEach((col, i) => {
+        const response = await fetch(`${API_URL}/api/products`);
+        if (!response.ok) throw new Error("Error conectando con la nube");
+        
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+            productos = data.map(fila => {
+                let obj = { ...fila };
+                // Parsear columnas que vienen como JSON string
+                ['images', 'variants'].forEach(col => {
                     if (col === 'images' || col === 'variants') {
-                        const val = fila[i];
+                        const val = fila[col];
                         try { 
                             // Intentamos leer como formato JSON
                             const parsed = JSON.parse(val);
@@ -593,16 +589,13 @@ async function iniciarTiendaConDB() {
                                 ? val.split(',').map(s => s.trim()) 
                                 : [];
                         }
-                    } else { obj[col] = fila[i]; }
+                    }
                 });
                 return obj;
             });
         }
     } catch (error) { 
-        console.error("❌ Error cargando DB:", error);
-        if (window.location.protocol === 'file:') {
-            alert("⚠️ ATENCIÓN: Para leer la base de datos 'tienda.db', no puedes abrir el archivo directamente. Debes usar un servidor local (como la extensión 'Live Server' en VS Code) o subirlo a un hosting.");
-        }
+        console.error("❌ Error cargando productos de la nube:", error);
         // Si falla la carga, dejamos la lista vacía para no mostrar datos falsos
         productos = [];
     } finally {
@@ -613,7 +606,7 @@ async function iniciarTiendaConDB() {
         if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
     }
 }
-document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
+document.addEventListener("DOMContentLoaded", iniciarTiendaD1);
 
 // 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL )
 window.showProduct = function (id) {
