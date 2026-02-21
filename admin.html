@@ -44,6 +44,9 @@
         <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Deyxpress Admin</h1>
         <p id="productCount" class="text-indigo-600 font-bold text-xs uppercase">Cargando productos...</p>
       </div>
+      <a href="index.html" target="_blank" class="bg-indigo-50 text-indigo-600 hover:bg-indigo-100 px-5 py-3 rounded-xl font-bold text-xs flex items-center gap-2 transition shadow-sm">
+        <i class="fas fa-store"></i> VER TIENDA ONLINE
+      </a>
     </div>
     
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -145,7 +148,7 @@
 
   <script>
     // --- CONFIGURACIÓN CLOUDFLARE D1 ---
-    const API_URL = "https://deyxpress.deyson20.workers.dev/"; // Ej: https://tienda-api.deyxpress.workers.dev
+    const API_URL = "https://deyxpress.deyson20.workers.dev"; // Ej: https://tienda-api.deyxpress.workers.dev
     
     let copiaProductos = [];
     let quill;
@@ -198,7 +201,7 @@
         } catch (e) {
             console.log("Error de conexión:", e);
             document.getElementById('errorMsg').classList.remove('hidden');
-            document.getElementById('errorMsg').textContent = "Error de conexión con el servidor";
+            document.getElementById('errorMsg').textContent = "Error de conexión: " + e.message;
         }
     }
 
