@@ -18,7 +18,7 @@ const searchInputMobile = document.getElementById("searchInputMobile");
 const formatter = new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 });
 
 // --- CONFIGURACIÓN CLOUDFLARE D1 ---
-const API_URL = "PON_AQUI_TU_URL_DEL_WORKER"; // Ej: https://tienda-api.deyxpress.workers.dev
+const API_URL = "https://deyxpress.deyson20.workers.dev"; // URL de tu Worker
 
 let cart = JSON.parse(localStorage.getItem("cart_deyxpress")) || [];
 let currentProduct = null;
