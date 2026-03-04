@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Pro - DEYXPRESS</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/sql-wasm.min.js"></script>
+  <!-- Quill Rich Text Editor -->
+  <link href="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.snow.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/quill@2.0.0/dist/quill.js"></script>
+  <script src="google-sheets.js"></script>
+  <style>
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        border-bottom: 0;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+        min-height: 120px;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 p-4 md:p-8 font-sans text-slate-900">
+  
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900 z-[100] flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-[2rem] shadow-2xl max-w-sm w-full text-center">
+      <h2 class="text-2xl font-black mb-6">Panel de Control</h2>
+      <input type="text" id="adminUser" placeholder="Usuario" class="w-full p-4 bg-slate-100 border-none rounded-xl mb-4 text-center font-bold">
+      <input type="password" id="adminPass" placeholder="Contraseña" class="w-full p-4 bg-slate-100 border-none rounded-xl mb-4 text-center font-bold">
+      <button onclick="verificarAcceso()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg">ENTRAR</button>
+      <p id="errorMsg" class="text-red-500 text-xs mt-4 hidden">Usuario o contraseña incorrectos</p>
+    </div>
+  </div>
+  
+  <div id="adminContent" class="max-w-6xl mx-auto hidden">
+    <div class="flex justify-between items-center mb-8 bg-white p-6 rounded-[2rem] shadow-sm">
+      <div>
+        <h1 class="text-2xl font-black text-slate-800 tracking-tighter uppercase">Deyxpress Admin</h1>
+        <p id="productCount" class="text-indigo-600 font-bold text-xs uppercase">Cargando productos...</p>
+      </div>
+      <button onclick="descargarArchivo()" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-black transition-all shadow-lg shadow-green-100 flex items-center gap-2 text-sm">
+        <i class="fas fa-save"></i> GUARDAR Y DESCARGAR DB
+      </button>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-1">
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-xl sticky top-8 border border-white">
+          <h2 id="formTitle" class="font-bold text-xl mb-6 flex items-center gap-2">
+            <i class="fas fa-plus-circle text-indigo-600"></i> Nuevo Producto
+          </h2>
+          <div class="space-y-4">
+            <input type="hidden" id="editIndex" value="-1">
+            <div class="space-y-2">
+              <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">ID del Producto (Único)</label>
+              <input id="productId" placeholder="Ej: SKU-001, mi-producto-1" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            </div>
+            <input id="name" placeholder="Nombre del producto" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            <div class="grid grid-cols-2 gap-3">
+              <input id="price" type="number" placeholder="Precio" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+              <input id="category" placeholder="Categoría" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <input id="video" placeholder="Link YouTube" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+                <select id="shippingStatus" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner font-bold text-slate-600">
+                    <option value="false">🚚 Cobrar Envío</option>
+                    <option value="true">🆓 Envío Gratis</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="space-y-2">
+                  <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">Nombre Bodega</label>
+                  <input type="text" id="bodegaName" placeholder="Ej: Bodega Principal" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+              </div>
+              <div class="space-y-2">
+                  <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">Departamento Origen</label>
+                  <select id="productOrigin" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+                      <option value="Nacional">Nacional / General</option>
+                      <optgroup label="Zona Estándar">
+                          <option value="Antioquia">Antioquia</option>
+                          <option value="Cundinamarca">Cundinamarca</option>
+                          <option value="Bogotá D.C.">Bogotá D.C.</option>
+                          <option value="Valle del Cauca">Valle del Cauca</option>
+                          <option value="Atlántico">Atlántico</option>
+                          <option value="Santander">Santander</option>
+                          <option value="Bolívar">Bolívar</option>
+                          <option value="Caldas">Caldas</option>
+                          <option value="Risaralda">Risaralda</option>
+                          <option value="Quindío">Quindío</option>
+                          <option value="Tolima">Tolima</option>
+                          <option value="Huila">Huila</option>
+                          <option value="Norte de Santander">Norte de Santander</option>
+                          <option value="Cauca">Cauca</option>
+                          <option value="Nariño">Nariño</option>
+                          <option value="Córdoba">Córdoba</option>
+                          <option value="Magdalena">Magdalena</option>
+                          <option value="Cesar">Cesar</option>
+                          <option value="Sucre">Sucre</option>
+                          <option value="Meta">Meta</option>
+                          <option value="Boyacá">Boyacá</option>
+                          <option value="Casanare">Casanare</option>
+                      </optgroup>
+                      <optgroup label="Zona Especial">
+                          <option value="Amazonas">Amazonas</option>
+                          <option value="San Andrés y Providencia">San Andrés y Providencia</option>
+                          <option value="Chocó">Chocó</option>
+                          <option value="Putumayo">Putumayo</option>
+                          <option value="Guainía">Guainía</option>
+                          <option value="Vaupés">Vaupés</option>
+                          <option value="Vichada">Vichada</option>
+                          <option value="Arauca">Arauca</option>
+                          <option value="Caquetá">Caquetá</option>
+                          <option value="Guaviare">Guaviare</option>
+                          <option value="La Guajira">La Guajira</option>
+                      </optgroup>
+                  </select>
+              </div>
+            </div>
+            <input id="variants" placeholder="Variantes (Rojo, Azul)" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+            <textarea id="imgs" rows="3" placeholder="Links de imágenes (uno por línea)" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner text-xs"></textarea>
+            <div class="space-y-2">
+              <label class="text-[10px] font-black tracking-widest uppercase text-slate-400">Descripción del Producto</label>
+              <div id="editor-container" class="bg-white"></div>
+            </div>
+            <button id="btnSave" onclick="guardarProducto()" class="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg uppercase text-sm">Guardar Cambios</button>
+            <button id="btnCancel" onclick="limpiarFormulario()" class="hidden w-full mt-2 bg-slate-100 text-slate-500 font-bold py-2 rounded-xl text-xs">CANCELAR</button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="lg:col-span-2">
+        <div class="bg-white p-6 rounded-[2.5rem] shadow-sm min-h-screen">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+            <h2 class="font-bold text-xl text-slate-800">Productos en la DB actual</h2>
+            <input type="text" id="adminSearch" oninput="renderAdmin()" placeholder="🔍 Buscar producto..." class="w-full sm:w-auto p-3 bg-slate-100 rounded-xl border-none text-sm shadow-inner">
+          </div>
+          <div id="adminList" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEFAULT_USER = "Deyson20";
+    const DEFAULT_PASS = "Dey2026*"; 
+    let copiaProductos = [];
+    let SQL;
+    let quill;
+
+    // 1. CARGAR DATOS DE LA DB AL INICIAR
+    async function cargarDatosDesdeDB() {
+        try {
+            if (!SQL) {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+                });
+            }
+            const response = await fetch('tienda.db');
+            if (!response.ok) {
+                console.log("No hay tienda.db previa, empezando de cero.");
+                copiaProductos = [];
+                renderAdmin();
+                return;
+            }
+            const arrayBuffer = await response.arrayBuffer();
+            const db = new SQL.Database(new Uint8Array(arrayBuffer));
+            const res = db.exec("SELECT * FROM productos");
+            
+            if (res.length > 0) {
+                const columnas = res[0].columns;
+                const filas = res[0].values;
+                copiaProductos = filas.map(fila => {
+                    let obj = {};
+                    columnas.forEach((col, i) => {
+                        if (col === 'images' || col === 'variants') {
+                            try { obj[col] = JSON.parse(fila[i]); } catch (e) { obj[col] = []; }
+                        } else { obj[col] = fila[i]; }
+                    });
+                    return obj;
+                });
+            }
+            renderAdmin();
+        } catch (err) {
+            console.error("Error cargando DB:", err);
+            renderAdmin();
+        }
+    }
+
+    async function verificarAcceso() {
+        const userInput = document.getElementById('adminUser').value;
+        const passInput = document.getElementById('adminPass').value;
+        let userReal = DEFAULT_USER;
+        let passReal = DEFAULT_PASS;
+
+        try {
+            if (!SQL) {
+                SQL = await initSqlJs({
+                    locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
+                });
+            }
+            
+            // Intentamos leer la contraseña de la DB si existe
+            const response = await fetch('tienda.db');
+            if (response.ok) {
+                const buffer = await response.arrayBuffer();
+                const tempDb = new SQL.Database(new Uint8Array(buffer));
+                try {
+                    const resPass = tempDb.exec("SELECT value FROM config WHERE key = 'admin_password'");
+                    if (resPass.length > 0 && resPass[0].values.length > 0) {
+                        passReal = resPass[0].values[0][0];
+                    }
+                    const resUser = tempDb.exec("SELECT value FROM config WHERE key = 'admin_user'");
+                    if (resUser.length > 0 && resUser[0].values.length > 0) {
+                        userReal = resUser[0].values[0][0];
+                    }
+                } catch(e) {
+                    console.log("Tabla config no existe aún, usando default.");
+                }
+            }
+        } catch (e) {
+            console.log("Error verificando DB, usando default.");
+        }
+
+        if (userInput === userReal && passInput === passReal) {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('adminContent').classList.remove('hidden');
+            cargarDatosDesdeDB();
+        } else {
+            document.getElementById('errorMsg').classList.remove('hidden');
+        }
+    }
+
+    function renderAdmin() {
+        const term = document.getElementById('adminSearch')?.value.toLowerCase() || "";
+        const listContainer = document.getElementById('adminList');
+        const countLabel = document.getElementById('productCount');
+        listContainer.innerHTML = "";
+        
+        const filtered = copiaProductos.filter(p => p.name.toLowerCase().includes(term));
+        countLabel.textContent = `${filtered.length} Productos (Total: ${copiaProductos.length})`;
+        
+        filtered.forEach((p) => {
+            const index = copiaProductos.indexOf(p); // Obtenemos el índice real para editar/borrar
+            const div = document.createElement('div');
+            div.className = "p-3 bg-white rounded-2xl flex gap-3 items-center border border-slate-100 hover:border-indigo-300 shadow-sm transition-all cursor-pointer";
+            div.onclick = (e) => { if (!e.target.closest('.btn-delete')) cargarParaEditar(index); };
+            
+            const img = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/150';
+            
+            div.innerHTML = `
+                <img src="${img}" onerror="this.src='https://placehold.co/150x150/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;" class="w-16 h-16 object-cover rounded-xl bg-slate-50">
+                <div class="flex-1 min-w-0">
+                    <p class="font-bold text-slate-800 truncate text-sm">${p.name}</p>
+                    <p class="text-[10px] text-gray-400 font-mono mt-0.5">ID: ${p.id}</p>
+                    <div class="flex flex-col gap-0.5 mt-1">
+                        <p class="text-[10px] text-slate-500 uppercase tracking-wider">📍 ${p.origin || "Nacional"}</p>
+                        <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">🏢 ${p.bodegaName || "Bodega Principal"}</p>
+                        ${p.freeShipping === "true" ? '<p class="text-[10px] text-green-500 font-black uppercase tracking-wider">🆓 ENVÍO GRATIS</p>' : ''}
+                    </div>
+                    <p class="text-xs font-bold text-indigo-600 mt-1">$${Number(p.price).toLocaleString()}</p>
+                </div>
+                <button onclick="event.stopPropagation(); eliminar(${index})" class="btn-delete p-3 text-slate-300 hover:text-red-500">
+                    <i class="fas fa-trash-alt"></i>
+                </button>
+            `;
+            listContainer.appendChild(div);
+            checkAdminImages(p, div);
+        });
+    }
+
+    function checkAdminImages(product, cardElement) {
+        if (!product.images || !Array.isArray(product.images)) return;
+        
+        product.images.forEach(url => {
+            const img = new Image();
+            img.src = url;
+            img.onerror = () => {
+                const mainImg = cardElement.querySelector('img');
+                if (mainImg && !mainImg.src.includes('text=AGOTADO')) {
+                    mainImg.src = 'https://placehold.co/150x150/e2e8f0/64748b?text=AGOTADO';
+                }
+            };
+        });
+    }
+
+    function guardarProducto() {
+        const idx = parseInt(document.getElementById('editIndex').value);
+        const customId = document.getElementById('productId').value.trim();
+
+        if (!customId) {
+            return alert("El ID del producto es obligatorio y no puede estar vacío.");
+        }
+
+        // Verificar si el ID ya existe en otro producto
+        const idExists = copiaProductos.some((p, i) => String(p.id) === customId && i !== idx);
+        if (idExists) {
+            return alert(`¡Error! El ID "${customId}" ya está en uso. Por favor, elige un ID único.`);
+        }
+
+        const data = {
+            id: customId,
+            name: document.getElementById('name').value.trim(),
+            price: Number(document.getElementById('price').value),
+            category: document.getElementById('category').value.trim() || "General",
+            video: document.getElementById('video').value.trim(),
+            freeShipping: document.getElementById('shippingStatus').value,
+            bodegaName: document.getElementById('bodegaName').value.trim(),
+            origin: document.getElementById('productOrigin').value.trim() || "Nacional",
+            variants: document.getElementById('variants').value.split(',').map(v => v.trim()).filter(v => v !== ""),
+            images: document.getElementById('imgs').value.split('\n').filter(l => l.trim() !== ""),
+            description: quill.root.innerHTML
+        };
+        
+        if (!data.name || !data.price) return alert("Nombre y Precio obligatorios");
+        
+        if (idx === -1) {
+            copiaProductos.push(data);
+        } else {
+            copiaProductos[idx] = data;
+        }
+        
+        limpiarFormulario();
+        renderAdmin();
+    }
+
+    function cargarParaEditar(index) {
+        const p = copiaProductos[index];
+        document.getElementById('editIndex').value = index;
+        document.getElementById('productId').value = p.id;
+        document.getElementById('name').value = p.name;
+        document.getElementById('price').value = p.price;
+        document.getElementById('category').value = p.category;
+        document.getElementById('video').value = p.video || "";
+        document.getElementById('shippingStatus').value = p.freeShipping || "false";
+        document.getElementById('bodegaName').value = p.bodegaName || "";
+        document.getElementById('productOrigin').value = p.origin || "";
+        document.getElementById('variants').value = p.variants ? p.variants.join(', ') : "";
+        document.getElementById('imgs').value = p.images.join('\n');
+        quill.root.innerHTML = p.description || "";
+        
+        document.getElementById('btnSave').textContent = "ACTUALIZAR PRODUCTO";
+        document.getElementById('btnCancel').classList.remove('hidden');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function limpiarFormulario() {
+        document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        document.getElementById('shippingStatus').value = "false";
+        quill.root.innerHTML = "";
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('btnSave').textContent = "GUARDAR CAMBIOS";
+        document.getElementById('btnCancel').classList.add('hidden');
+    }
+
+    function eliminar(index) {
+        if (confirm("¿Eliminar este producto?")) {
+            copiaProductos.splice(index, 1);
+            renderAdmin();
+        }
+    }
+
+    async function descargarArchivo() {
+    const db = new SQL.Database();
+
+    // 1. Añadimos la columna 'bodegaName'
+    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT, freeShipping TEXT)");
+
+    // 2. Creamos tabla de configuración para la contraseña
+    db.run("CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT)");
+    db.run("INSERT INTO config VALUES (?, ?)", ['admin_password', 'Dey2026*']);
+    db.run("INSERT INTO config VALUES (?, ?)", ['admin_user', 'Deyson20']);
+
+    // 3. IMPORTANTE: Ahora hay 11 signos de interrogación
+    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    
+    copiaProductos.forEach(p => {
+        // 4. Pasamos 11 valores en el arreglo.
+        stmt.run([
+            p.id, 
+            p.name, 
+            p.price, 
+            p.category, 
+            p.description, 
+            JSON.stringify(p.images), 
+            p.video, 
+            JSON.stringify(p.variants),
+            p.origin || "Nacional",
+            p.bodegaName || "",
+            p.freeShipping || "false"
+        ]);
+    });
+    
+    const data = db.export();
+    const blob = new Blob([data], { type: "application/octet-stream" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "tienda.db";
+    a.click();
+    alert("¡Base de datos generada con sistema de Bodegas! Reemplaza el archivo 'tienda.db' antiguo.");
+  }
+
+  // Inicializar el editor de texto enriquecido
+  quill = new Quill('#editor-container', {
+      theme: 'snow',
+      modules: {
+          toolbar: [
+              ['bold', 'italic', 'underline'],
+              [{ 'color': [] }]
+          ]
+      },
+      placeholder: 'Escribe la descripción del producto aquí...'
+  });
+  </script>
+</body>
+</html>
