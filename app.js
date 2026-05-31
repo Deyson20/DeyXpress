@@ -804,7 +804,7 @@ ${listaProductos}
 ━━━━━━━━━━━━━━━━━━`;
 
     // 7. Configurar número y abrir WhatsApp
-    const fone = "573166093629";
+    const fone = "573159403286";
     window.open(`https://wa.me/${fone}?text=${encodeURIComponent(mensaje)}`, '_blank');
     setTimeout(() => {
         // En lugar de borrar de una vez, preguntamos:
