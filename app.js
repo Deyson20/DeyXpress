@@ -731,8 +731,6 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
     const tipoRes = document.getElementById("tipoResidencia").value;
     const direccion = document.getElementById("direccion").value;
     const referencia = document.getElementById("referencia").value;
-    const horario = document.getElementById("horario").value;
-    const efectivo = document.getElementById("confirmacionEfectivo").value;
 
     // 3. Capturar campos de Compromiso (Nuevos)
     const dejaDinero = document.querySelector('input[name="p1"]:checked')?.value || "No especificado";
@@ -752,15 +750,13 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
         recibeTexto = "El cliente personalmente";
     }
 
-    // 5. Capturar días seleccionados
-    const dias = Array.from(document.querySelectorAll('input[name="dias"]:checked'))
-        .map(el => el.value).join(", ") || "No especificado";
+
 
     // 5. ENVIAR A GOOGLE SHEETS (Respaldo)
     const infoParaSheets = {
         nombre, telefono, departamento, email, ciudad, barrio,
-        tipoRes, direccion, referencia, horario, efectivo,
-        dejaDinero, estaraPendiente, entiendeDevolucion, recibeTexto, dias,
+        tipoRes, direccion, referencia,
+        dejaDinero, estaraPendiente, entiendeDevolucion, recibeTexto,
         productos: cart.map(item => `${item.name} ${item.variant ? `(${item.variant})` : ''} (x${item.qty})`).join(", "),
         total: totalPedido
     };
@@ -775,7 +771,7 @@ document.getElementById("orderForm")?.addEventListener("submit", function (e) {
     const mensaje = `*NUEVO PEDIDO - DEYXPRESS*
 ━━━━━━━━━━━━━━━━━━
 👤 *DATOS CLIENTE*
-• Nombre: ${nombre}
+• Nombre completo: ${nombre}
 • Celular: ${telefono}
 • Email: ${email}
 
@@ -793,9 +789,6 @@ ${listaProductos}
 
 🚚 *ENTREGA*
 • Recibe: ${recibeTexto}
-• Días: ${dias}
-• Horario: ${horario}
-• ¿Dinero listo?: ${efectivo}
 
 🤝 *COMPROMISO*
 • ¿Dejará el dinero?: ${dejaDinero}
