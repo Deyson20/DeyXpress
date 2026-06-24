@@ -254,7 +254,7 @@ function showProductDetail(product) {
         <div class="space-y-3">
             <button onclick="comprarDirectoDesdeDetail()" 
                 class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition uppercase tracking-wider">
-                Comprar Ahora
+                Pedir por WhatsApp
             </button>
             <button onclick="addToCartFromDetail(this)" 
                 class="w-full bg-white text-indigo-600 py-4 rounded-xl font-bold border-2 border-indigo-600 hover:bg-indigo-50 transition uppercase tracking-wider">
