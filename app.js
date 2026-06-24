@@ -96,7 +96,7 @@ function renderProducts(filterTerm = "") {
         </button>
         <button onclick="event.stopPropagation(); comprarDirecto('${p.id}')" 
         class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
-        Comprar Directo
+        Pedir por WhatsApp
 </button>
       </div>
     `;
