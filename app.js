@@ -725,10 +725,16 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     // ... (Aquí capturas todas tus variables: nombre, ciudad, barrio, compromiso, etc.)
     
     
+    // CÓDIGO CORREGIDO
+    // 1. Identificar solo las bodegas de los productos que NO tienen envío gratis
+    const productosConCostoEnvio = cart.filter(p => p.freeShipping !== "true");
+    const bodegasDetectadas = [...new Set(productosConCostoEnvio.map(p => p.origin || "Nacional"))];
     
-    const bodegasDetectadas = [...new Set(cart.map(p => p.origin || "Nacional"))];
     let fleteFinal = 0;
-    bodegasDetectadas.forEach(origen => fleteFinal += obtenerTarifaPorOrigen(origen));
+    // Solo sumamos flete si hay productos que no tengan envío gratis
+    if (productosConCostoEnvio.length > 0) {
+        bodegasDetectadas.forEach(origen => fleteFinal += obtenerTarifaPorOrigen(origen));
+    }
     
     const subtotalProductos = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const totalConFlete = subtotalProductos + fleteFinal;
