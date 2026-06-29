@@ -95,7 +95,7 @@ function renderProducts(filterTerm = "") {
                 Añadir al Carrito
         </button>
         <button onclick="event.stopPropagation(); comprarDirecto('${p.id}')" 
-        class="bg-indigo-600 text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
+        class="bg-[#25D366] text-white py-2 w-full rounded-xl font-bold text-xs shadow-md">
         Pedir por WhatsApp
 </button>
       </div>
@@ -253,7 +253,7 @@ function showProductDetail(product) {
 
         <div class="space-y-3">
             <button onclick="comprarDirectoDesdeDetail()" 
-                class="w-full bg-indigo-600 text-white py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition uppercase tracking-wider">
+                class="w-full bg-[#25D366] text-white py-4 rounded-xl font-bold shadow-lg hover:bg-[#128C7E] transition uppercase tracking-wider">
                 Pedir por WhatsApp
             </button>
             <button onclick="addToCartFromDetail(this)" 
