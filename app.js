@@ -73,25 +73,19 @@ function renderProducts(filterTerm = "") {
     }
     
     filtered.forEach(p => {
-                const div = document.createElement("div");
-                div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
-                div.innerHTML = `
-            <div class="relative mb-3">
-                <img src="${p.images[0]}" onerror="handleCatalogError(this)" class="h-40 w-full object-contain">
-                <button onclick="event.stopPropagation(); openImageModal('${p.images[0]}')" class="absolute right-2 top-2 bg-white/90 p-2 rounded-full text-slate-700 shadow">
-                    <i class="fas fa-search-plus"></i>
-                </button>
-            </div>
-            <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
-        ${p.name}
+        const div = document.createElement("div");
+        div.className = "bg-white p-4 rounded-2xl shadow hover:shadow-lg transition cursor-pointer flex flex-col";
+        div.innerHTML = `
+      <img src="${p.images[0]}" 
+     onerror="handleCatalogError(this)" 
+     class="h-40 w-full object-contain mb-3">
+      <h3 class="font-bold text-slate-800 text-sm mb-1 break-words" style="hyphens: auto; -webkit-hyphens: auto;">
+    ${p.name}
 </h3>
-            ${p.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded w-fit mb-1">ENVÍO GRATIS</span>' : ''}
-            <div class="mt-2">
-                ${p.oldPrice ? `<p class="text-xs text-slate-400 line-through">${formatter.format(p.oldPrice)}</p>` : ''}
-                <p class="font-black text-indigo-600">${formatter.format(p.price)}</p>
-            </div>
+      ${p.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded w-fit mb-1">ENVÍO GRATIS</span>' : ''}
+      <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
       
-            <div class="mt-auto space-y-2 pt-3">
+      <div class="mt-auto space-y-2 pt-3">
         <button onclick="event.stopPropagation(); verDetalleDesdeString('${p.id}')" 
                 class="border border-indigo-600 text-indigo-600 py-2 w-full rounded-xl font-bold text-xs">
                 Ver Detalle
@@ -221,9 +215,6 @@ function showProductDetail(product) {
             <img id="mainDetailImage" src="${imagenes[0]}" 
      onerror="handleDetailError(this)" 
      class="w-full h-full object-contain p-4 transition-all duration-300">
-            <button onclick="openImageModal(document.getElementById('mainDetailImage').src)" class="absolute right-4 top-4 bg-white/90 p-3 rounded-full shadow text-slate-700">
-                <i class="fas fa-search-plus"></i>
-            </button>
         </div>
         
         ${imagenes.length > 1 ? `
@@ -244,10 +235,7 @@ function showProductDetail(product) {
     ${product.name}
 </h2>
         ${product.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-xs font-black px-3 py-1 rounded-full w-fit mt-2">🚀 ENVÍO GRATIS</span>' : ''}
-                <div class="my-4">
-                    ${product.oldPrice ? `<p class="text-sm text-slate-400 line-through">${formatter.format(product.oldPrice)}</p>` : ''}
-                    <p class="text-indigo-600 text-3xl font-black">${formatter.format(product.price)}</p>
-                </div>
+        <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
         
         ${product.variants && product.variants.length > 0 ? `
@@ -343,34 +331,6 @@ window.updateThumbUI = function(selectedThumb) {
     });
     selectedThumb.classList.add('border-indigo-600');
     selectedThumb.classList.remove('border-transparent');
-};
-
-// Modal simple para ver imagen en grande (lupa)
-window.openImageModal = function(url) {
-    if (!url) return;
-    let modal = document.getElementById('imageModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'imageModal';
-        modal.className = 'fixed inset-0 bg-black/80 z-[9999] flex items-center justify-center p-4';
-        modal.innerHTML = `
-            <div class="relative max-w-4xl w-full">
-                <button id="closeImageModal" class="absolute right-2 top-2 text-white bg-black/50 p-2 rounded-full"><i class="fas fa-times"></i></button>
-                <img id="imageModalImg" src="" class="w-full h-auto max-h-[90vh] object-contain rounded-lg shadow-lg" />
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.querySelector('#closeImageModal').onclick = closeImageModal;
-        modal.onclick = (e) => { if (e.target === modal) closeImageModal(); };
-    }
-    const img = modal.querySelector('#imageModalImg');
-    img.src = url;
-    modal.classList.remove('hidden');
-};
-
-window.closeImageModal = function() {
-    const modal = document.getElementById('imageModal');
-    if (modal) modal.classList.add('hidden');
 };
 
 // 4. FUNCIONES PARA VARIANTES
