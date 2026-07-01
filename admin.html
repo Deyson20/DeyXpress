@@ -57,7 +57,7 @@
     </div>
     
     <div id="adminContent" class="max-w-6xl mx-auto hidden">
-        <<div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 rounded-[2rem] p-6 shadow-2xl mb-8 text-white">
+        <div class="bg-gradient-to-r from-indigo-700 via-indigo-600 to-blue-600 rounded-[2rem] p-6 shadow-2xl mb-8 text-white">
             
             <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-6">
                 
@@ -325,7 +325,21 @@
                         <p class="text-[10px] text-indigo-500 font-bold uppercase tracking-wider">🏢 ${p.bodegaName || "Bodega Principal"}</p>
                         ${p.freeShipping === "true" ? '<p class="text-[10px] text-green-500 font-black uppercase tracking-wider">🆓 ENVÍO GRATIS</p>' : ''}
                     </div>
-                    <p class="text-xs font-bold text-indigo-600 mt-1">$${Number(p.price).toLocaleString()}</p>
+                    <div class="mt-2 flex items-center gap-2 flex-wrap">
+
+    ${
+        p.oldPrice && Number(p.oldPrice) > Number(p.price)
+        ? `<span class="text-[11px] text-gray-400 line-through">
+                $${Number(p.oldPrice).toLocaleString()}
+           </span>`
+        : ""
+    }
+
+    <span class="text-sm font-black text-indigo-600">
+        $${Number(p.price).toLocaleString()}
+    </span>
+
+</div>
                 </div>
                 <button onclick="event.stopPropagation(); eliminar(${index})" class="btn-delete p-3 text-slate-300 hover:text-red-500">
                     <i class="fas fa-trash-alt"></i>
