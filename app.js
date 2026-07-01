@@ -186,9 +186,14 @@ function showProductDetail(product) {
         }
     }
     
+        // Ocultamos el catálogo y el formulario de pedido obligatoriamente
     catalogView.classList.add("hidden");
+    orderFormView.classList.add("hidden");
+    
+    // Mostramos únicamente el detalle del producto
     productDetailView.classList.remove("hidden");
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
     
     
     // 1. Manejo de imágenes: Convierte texto con comas en una lista (Array)
@@ -366,13 +371,13 @@ function showCatalog() {
     productDetailView.classList.add("hidden");
     orderFormView.classList.add("hidden");
     localStorage.setItem("ultima_vista_deyxpress", "catalogo");
-    setTimeout(() => {
-        window.scrollTo({
-            top: scrollPosition,
-            behavior: 'instant'
-        });
-    }, 10); // Usamos un pequeño retraso para asegurar que la vista ya es visible
+    // Eliminamos el delay para que no interfiera si vienes desde el formulario
+    window.scrollTo({
+        top: scrollPosition || 0,
+        behavior: 'instant'
+    });
 }
+
 
 // 6. LÓGICA DEL CARRITO
 function updateCart() {
@@ -648,17 +653,21 @@ window.toggleCart = function() {
     }
 };
 window.confirmOrder = function() {
-    // Ocultamos catálogo y detalle, mostramos formulario
+    // Forzamos la ocultación absoluta de las vistas anteriores
     catalogView.classList.add("hidden");
     productDetailView.classList.add("hidden");
+    
+    // Mostramos únicamente el formulario de pedidos
     orderFormView.classList.remove("hidden");
     
     // Cerramos el carrito lateral si está abierto
     if (cartSidebar) cartSidebar.classList.add("translate-x-full");
     
-    window.scrollTo(0, 0);
+    // Mandamos la pantalla arriba al instante para que no herede el scroll inferior
+    window.scrollTo({ top: 0, behavior: 'instant' });
     localStorage.setItem("ultima_vista_deyxpress", "formulario");
 };
+
 
 window.toggleCategoriesMenu = function() {
     const menu = document.getElementById("categoriesMenu");
@@ -670,12 +679,20 @@ window.toggleCategoriesMenu = function() {
 };
 
 window.closeOrderForm = function() {
-    if (history.state?.view === 'order') history.back();
-    else {
-        orderFormView.classList.add("hidden");
+    // Oculta el formulario por completo
+    orderFormView.classList.add("hidden");
+    
+    // Si el usuario venía navegando el historial de una vista previa de detalle, regresamos
+    if (history.state?.view === 'order') {
+        history.back();
+    } else {
+        // En caso contrario, aseguramos volver al catálogo limpio y subimos scroll
         catalogView.classList.remove("hidden");
+        productDetailView.classList.add("hidden");
+        window.scrollTo({ top: 0, behavior: 'instant' });
     }
 };
+
 
 window.onpopstate = function(event) {
     const menu = document.getElementById("categoriesMenu");
