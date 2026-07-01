@@ -65,6 +65,7 @@
             <input id="name" placeholder="Nombre del producto" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
             <div class="grid grid-cols-2 gap-3">
               <input id="price" type="number" placeholder="Precio" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
+              <input id="oldPrice" type="number" placeholder="Precio Antes" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
               <input id="category" placeholder="Categoría" class="w-full p-3 bg-slate-50 rounded-xl border-none shadow-inner">
             </div>
             <div class="grid grid-cols-2 gap-3">
@@ -308,6 +309,7 @@
             id: customId,
             name: document.getElementById('name').value.trim(),
             price: Number(document.getElementById('price').value),
+            oldPrice: Number(document.getElementById('oldPrice').value) || 0,
             category: document.getElementById('category').value.trim() || "General",
             video: document.getElementById('video').value.trim(),
             freeShipping: document.getElementById('shippingStatus').value,
@@ -336,6 +338,7 @@
         document.getElementById('productId').value = p.id;
         document.getElementById('name').value = p.name;
         document.getElementById('price').value = p.price;
+        document.getElementById('oldPrice').value = p.oldPrice || "";
         document.getElementById('category').value = p.category;
         document.getElementById('video').value = p.video || "";
         document.getElementById('shippingStatus').value = p.freeShipping || "false";
@@ -352,6 +355,7 @@
 
     function limpiarFormulario() {
         document.querySelectorAll('input, textarea').forEach(el => el.value = "");
+        document.getElementById('oldPrice').value = "";
         document.getElementById('shippingStatus').value = "false";
         quill.root.innerHTML = "";
         document.getElementById('editIndex').value = "-1";
@@ -370,7 +374,7 @@
     const db = new SQL.Database();
 
     // 1. Añadimos la columna 'bodegaName'
-    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT, freeShipping TEXT)");
+    db.run("CREATE TABLE productos (id TEXT PRIMARY KEY, name TEXT, price REAL, oldPrice REAL, category TEXT, description TEXT, images TEXT, video TEXT, variants TEXT, origin TEXT, bodegaName TEXT, freeShipping TEXT)");
 
     // 2. Creamos tabla de configuración para la contraseña
     db.run("CREATE TABLE config (key TEXT PRIMARY KEY, value TEXT)");
@@ -378,7 +382,7 @@
     db.run("INSERT INTO config VALUES (?, ?)", ['admin_user', 'Deyson20']);
 
     // 3. IMPORTANTE: Ahora hay 11 signos de interrogación
-    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    const stmt = db.prepare("INSERT INTO productos VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
     
     copiaProductos.forEach(p => {
         // 4. Pasamos 11 valores en el arreglo.
@@ -386,6 +390,7 @@
             p.id, 
             p.name, 
             p.price, 
+            p.oldPrice || 0,
             p.category, 
             p.description, 
             JSON.stringify(p.images), 

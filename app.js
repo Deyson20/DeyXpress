@@ -83,7 +83,9 @@ function renderProducts(filterTerm = "") {
     ${p.name}
 </h3>
       ${p.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-[10px] font-black px-2 py-1 rounded w-fit mb-1">ENVÍO GRATIS</span>' : ''}
-      <p class="font-black text-indigo-600 mt-2">${formatter.format(p.price)}</p>
+      ${p.oldPrice && Number(p.oldPrice) > 0 ? `<p class="text-[10px] text-slate-400 line-through">Antes: ${formatter.format(p.oldPrice)}</p>` : ''}
+<p class="font-black text-indigo-600 ${p.oldPrice && Number(p.oldPrice) > 0 ? '' : 'mt-2'}">${formatter.format(p.price)}</p>
+
       
       <div class="mt-auto space-y-2 pt-3">
         <button onclick="event.stopPropagation(); verDetalleDesdeString('${p.id}')" 
@@ -235,7 +237,11 @@ function showProductDetail(product) {
     ${product.name}
 </h2>
         ${product.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-xs font-black px-3 py-1 rounded-full w-fit mt-2">🚀 ENVÍO GRATIS</span>' : ''}
-        <p class="text-indigo-600 text-3xl font-black my-4">${formatter.format(product.price)}</p>
+        <div class="my-4">
+    ${product.oldPrice && Number(product.oldPrice) > 0 ? `<p class="text-sm text-slate-400 line-through">Antes: ${formatter.format(product.oldPrice)}</p>` : ''}
+    <p class="text-indigo-600 text-3xl font-black">${formatter.format(product.price)}</p>
+</div>
+
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
         
         ${product.variants && product.variants.length > 0 ? `
