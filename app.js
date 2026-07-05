@@ -579,63 +579,54 @@ function comprarDirectoDesdeDetail() {
 }
 
 // 7. MOTOR DB (SQLITE)
-async function iniciarTiendaConDB() {
+async function cargarProductos() {
     try {
-        if (typeof initSqlJs === 'undefined') throw new Error("La librería SQL.js no se ha cargado.");
-        
-        const SQL = await initSqlJs({
-            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.6.2/${file}`
-        });
-        // 1. Definimos la versión basada en la fecha actual (ej. 2026-06-26)
-        const versionFecha = new Date().toISOString().split('T')[0];
-        
-        // 2. Modificamos el fetch para incluir esa versión
-        const response = await fetch(`tienda.db?v=${versionFecha}`);
-        
-        if (!response.ok) throw new Error("No se encontró tienda.db");
-        const arrayBuffer = await response.arrayBuffer();
-        const db = new SQL.Database(new Uint8Array(arrayBuffer));
-        const res = db.exec("SELECT * FROM productos");
-        // Seleccionamos todo para incluir freeShipping y bodegaName
-        
-        if (res.length > 0) {
-            const columnas = res[0].columns;
-            const filas = res[0].values;
-            productos = filas.map(fila => {
-                let obj = {};
-                columnas.forEach((col, i) => {
-                    if (col === 'images' || col === 'variants') {
-                        const val = fila[i];
-                        try {
-                            // Intentamos leer como formato JSON
-                            const parsed = JSON.parse(val);
-                            obj[col] = Array.isArray(parsed) ? parsed : [parsed];
-                        } catch (e) {
-                            // Si falla, intentamos leer como texto separado por comas
-                            obj[col] = (typeof val === 'string' && val.trim().length > 0) ?
-                                val.split(',').map(s => s.trim()) : [];
-                        }
-                    } else { obj[col] = fila[i]; }
-                });
-                return obj;
-            });
+        const response = await fetch("/api/productos");
+
+        if (!response.ok) {
+            throw new Error("No fue posible obtener los productos.");
         }
-    } catch (error) {
-        console.error("❌ Error cargando DB:", error);
-        if (window.location.protocol === 'file:') {
-            alert("⚠️ ATENCIÓN: Para leer la base de datos 'tienda.db', no puedes abrir el archivo directamente. Debes usar un servidor local (como la extensión 'Live Server' en VS Code) o subirlo a un hosting.");
-        }
-        // Si falla la carga, dejamos la lista vacía para no mostrar datos falsos
+
+        productos = await response.json();
+
+        productos = productos.map(p => ({
+            ...p,
+            images: (() => {
+                try {
+                    return JSON.parse(p.images || "[]");
+                } catch {
+                    return (p.images || "")
+                        .split(",")
+                        .map(i => i.trim())
+                        .filter(Boolean);
+                }
+            })(),
+            variants: (() => {
+                try {
+                    return JSON.parse(p.variants || "[]");
+                } catch {
+                    return [];
+                }
+            })()
+        }));
+
+    } catch (err) {
+        console.error("Error cargando productos:", err);
         productos = [];
-    } finally {
-        loadCategories();
-        renderProducts();
-        updateCart();
-        if (searchInput) searchInput.addEventListener("input", (e) => renderProducts(e.target.value));
-        if (searchInputMobile) searchInputMobile.addEventListener("input", (e) => renderProducts(e.target.value));
     }
+
+    loadCategories();
+    renderProducts();
+    updateCart();
+
+    if (searchInput)
+        searchInput.addEventListener("input", e => renderProducts(e.target.value));
+
+    if (searchInputMobile)
+        searchInputMobile.addEventListener("input", e => renderProducts(e.target.value));
 }
-document.addEventListener("DOMContentLoaded", iniciarTiendaConDB);
+
+document.addEventListener("DOMContentLoaded", cargarProductos);
 
 // 8. INTERFAZ Y NAVEGACIÓN (CON HISTORIAL )
 window.showProduct = function(id) {
