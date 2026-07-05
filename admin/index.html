@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Administrador</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+
+<body class="bg-slate-100">
+
+<div class="max-w-7xl mx-auto p-8">
+
+<h1 class="text-3xl font-bold mb-8">
+Administrador de Productos
+</h1>
+
+<div class="bg-white rounded-xl shadow p-6 mb-8">
+
+<h2 class="font-bold text-xl mb-4">
+
+Nuevo producto
+
+</h2>
+
+<div class="grid md:grid-cols-2 gap-4">
+
+<input id="name" class="border p-3 rounded" placeholder="Nombre">
+
+<input id="price" type="number" class="border p-3 rounded" placeholder="Precio">
+
+<input id="oldPrice" type="number" class="border p-3 rounded" placeholder="Precio anterior">
+
+<input id="category" class="border p-3 rounded" placeholder="Categoría">
+
+<input id="origin" class="border p-3 rounded" placeholder="Origen">
+
+<input id="bodegaName" class="border p-3 rounded" placeholder="Bodega">
+
+<input id="video" class="border p-3 rounded" placeholder="Video">
+
+<input id="freeShipping" class="border p-3 rounded" placeholder="true / false">
+
+<textarea
+id="description"
+class="border p-3 rounded md:col-span-2"
+placeholder="Descripción"></textarea>
+
+<textarea
+id="images"
+class="border p-3 rounded md:col-span-2"
+placeholder='["https://imagen1.jpg","https://imagen2.jpg"]'></textarea>
+
+<textarea
+id="variants"
+class="border p-3 rounded md:col-span-2"
+placeholder='[]'></textarea>
+
+</div>
+
+<button
+onclick="guardarProducto()"
+class="mt-6 bg-indigo-600 text-white px-6 py-3 rounded">
+
+Guardar producto
+
+</button>
+
+</div>
+
+<div id="lista"></div>
+
+</div>
+
+<script src="admin.js"></script>
+
+</body>
+</html>
