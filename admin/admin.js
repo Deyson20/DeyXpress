@@ -4,6 +4,40 @@ let productos = [];
 let productoEditando = null;
 
 // ==========================
+// EDITOR QUILL
+// ==========================
+
+const quill = new Quill("#editor", {
+
+    theme: "snow",
+
+    placeholder: "Escribe una descripción atractiva del producto...",
+
+    modules: {
+
+        toolbar: [
+
+            [{ header: [1, 2, 3, false] }],
+
+            ["bold", "italic", "underline", "strike"],
+
+            [{ color: [] }, { background: [] }],
+
+            [{ list: "ordered" }, { list: "bullet" }],
+
+            ["blockquote"],
+
+            ["link", "image", "video"],
+
+            ["clean"]
+
+        ]
+
+    }
+
+});
+
+// ==========================
 // CARGAR PRODUCTOS
 // ==========================
 async function cargarProductos() {
@@ -132,7 +166,7 @@ async function guardarProducto(){
         price:Number(document.getElementById("price").value),
         oldPrice:Number(document.getElementById("oldPrice").value),
         category:document.getElementById("category").value,
-        description:document.getElementById("description").value,
+        description: quill.root.innerHTML,
         images:document.getElementById("images").value,
         video:document.getElementById("video").value,
         variants:document.getElementById("variants").value,
@@ -193,7 +227,6 @@ function limpiarFormulario(){
         "price",
         "oldPrice",
         "category",
-        "description",
         "images",
         "video",
         "variants",
@@ -206,6 +239,8 @@ function limpiarFormulario(){
         document.getElementById(id).value="";
 
     });
+
+    quill.setContents([]);
 
     document.getElementById("btnGuardar").innerHTML=
         "+ Nuevo Producto";
@@ -227,7 +262,7 @@ function editarProducto(id) {
     document.getElementById("price").value = p.price || "";
     document.getElementById("oldPrice").value = p.oldPrice || "";
     document.getElementById("category").value = p.category || "";
-    document.getElementById("description").value = p.description || "";
+    quill.root.innerHTML = p.description || "";
     document.getElementById("images").value = p.images || "";
     document.getElementById("video").value = p.video || "";
     document.getElementById("variants").value = p.variants || "";

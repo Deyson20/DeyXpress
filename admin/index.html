@@ -1,216 +1,217 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>DEYXPRESS Admin</title>
+    <title>DEYXPRESS Admin</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Quill -->
+    <link href="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.snow.css" rel="stylesheet">
+
+    <script src="https://cdn.jsdelivr.net/npm/quill@2/dist/quill.js"></script>
 
 </head>
 
 <body class="bg-slate-100 min-h-screen">
 
-<div class="flex min-h-screen">
+    <div class="flex min-h-screen">
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-slate-900 text-white flex flex-col">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-slate-900 text-white flex flex-col">
 
-        <div class="p-6 border-b border-slate-800">
+            <div class="p-6 border-b border-slate-800">
 
-            <h1 class="text-2xl font-black">
-                DEYXPRESS
-            </h1>
+                <h1 class="text-2xl font-black">
+                    DEYXPRESS
+                </h1>
 
-            <p class="text-slate-400 text-sm mt-1">
-                Panel Administrativo
-            </p>
-
-        </div>
-
-        <nav class="flex-1 p-4 space-y-2">
-
-            <button class="w-full text-left bg-indigo-600 px-4 py-3 rounded-xl font-semibold">
-                📦 Productos
-            </button>
-
-            <button class="w-full text-left hover:bg-slate-800 px-4 py-3 rounded-xl">
-                ⚙ Configuración
-            </button>
-
-        </nav>
-
-    </aside>
-
-    <!-- Contenido -->
-
-    <main class="flex-1 p-8">
-
-        <!-- Header -->
-
-        <div class="flex justify-between items-center mb-8">
-
-            <div>
-
-                <h2 class="text-3xl font-black text-slate-800">
-                    Productos
-                </h2>
-
-                <p class="text-slate-500">
-                    Administra el catálogo de la tienda.
+                <p class="text-slate-400 text-sm mt-1">
+                    Panel Administrativo
                 </p>
 
             </div>
 
-            <div class="flex gap-3">
+            <nav class="flex-1 p-4 space-y-2">
 
-    <button
-        id="btnGuardar"
-        onclick="guardarProducto()"
-        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow transition">
+                <button class="w-full text-left bg-indigo-600 px-4 py-3 rounded-xl font-semibold">
+                    📦 Productos
+                </button>
 
-        + Nuevo Producto
+                <button class="w-full text-left hover:bg-slate-800 px-4 py-3 rounded-xl">
+                    ⚙ Configuración
+                </button>
 
-    </button>
+            </nav>
 
-    <button
-        onclick="limpiarFormulario()"
-        class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold transition">
+        </aside>
 
-        Limpiar
+        <!-- Contenido -->
 
-    </button>
+        <main class="flex-1 p-8">
 
-</div>
+            <!-- Header -->
 
-        </div>
+            <div class="flex justify-between items-center mb-8">
 
-        <!-- Tarjetas -->
+                <div>
 
-        <div class="grid md:grid-cols-3 gap-5 mb-8">
+                    <h2 class="text-3xl font-black text-slate-800">
+                        Productos
+                    </h2>
 
-            <div class="bg-white rounded-2xl shadow p-6">
+                    <p class="text-slate-500">
+                        Administra el catálogo de la tienda.
+                    </p>
 
-                <div class="text-slate-400 text-sm">
-                    Productos
                 </div>
 
-                <div id="totalProductos"
-                     class="text-3xl font-black mt-2">
-                    --
-                </div>
+                <div class="flex gap-3">
 
-            </div>
+                    <button id="btnGuardar" onclick="guardarProducto()"
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow transition">
 
-            <div class="bg-white rounded-2xl shadow p-6">
+                        + Nuevo Producto
 
-                <div class="text-slate-400 text-sm">
-                    Categorías
-                </div>
+                    </button>
 
-                <div id="totalCategorias"
-                     class="text-3xl font-black mt-2">
-                    --
-                </div>
+                    <button onclick="limpiarFormulario()"
+                        class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold transition">
 
-            </div>
+                        Limpiar
 
-            <div class="bg-white rounded-2xl shadow p-6">
+                    </button>
 
-                <div class="text-slate-400 text-sm">
-                    Precio promedio
-                </div>
-
-                <div id="precioPromedio"
-                     class="text-3xl font-black mt-2">
-                    --
                 </div>
 
             </div>
 
-        </div>
+            <!-- Tarjetas -->
 
-        <!-- Formulario -->
+            <div class="grid md:grid-cols-3 gap-5 mb-8">
 
-        <div class="bg-white rounded-2xl shadow p-8 mb-8">
+                <div class="bg-white rounded-2xl shadow p-6">
 
-            <h3 class="text-xl font-bold mb-6">
-                Información del producto
-            </h3>
+                    <div class="text-slate-400 text-sm">
+                        Productos
+                    </div>
 
-            <div class="grid md:grid-cols-2 gap-4">
+                    <div id="totalProductos" class="text-3xl font-black mt-2">
+                        --
+                    </div>
 
-                <input id="name" class="border rounded-xl p-3" placeholder="Nombre">
+                </div>
 
-                <input id="price" type="number" class="border rounded-xl p-3" placeholder="Precio">
+                <div class="bg-white rounded-2xl shadow p-6">
 
-                <input id="oldPrice" type="number" class="border rounded-xl p-3" placeholder="Precio anterior">
+                    <div class="text-slate-400 text-sm">
+                        Categorías
+                    </div>
 
-                <input id="category" class="border rounded-xl p-3" placeholder="Categoría">
+                    <div id="totalCategorias" class="text-3xl font-black mt-2">
+                        --
+                    </div>
 
-                <input id="origin" class="border rounded-xl p-3" placeholder="Origen">
+                </div>
 
-                <input id="bodegaName" class="border rounded-xl p-3" placeholder="Bodega">
+                <div class="bg-white rounded-2xl shadow p-6">
 
-                <input id="video" class="border rounded-xl p-3" placeholder="Video">
+                    <div class="text-slate-400 text-sm">
+                        Precio promedio
+                    </div>
 
-                <select
-                    id="freeShipping"
-                    class="border rounded-xl p-3">
+                    <div id="precioPromedio" class="text-3xl font-black mt-2">
+                        --
+                    </div>
 
-                    <option value="">Envío gratis</option>
-                    <option value="true">Sí</option>
-                    <option value="false">No</option>
-
-                </select>
-
-                <textarea
-                    id="description"
-                    class="border rounded-xl p-3 md:col-span-2 h-40"
-                    placeholder="Descripción"></textarea>
-
-                <textarea
-                    id="images"
-                    class="border rounded-xl p-3 md:col-span-2 h-24"
-                    placeholder="https://imagen1.jpg, https://imagen2.jpg"></textarea>
-
-                <textarea
-                    id="variants"
-                    class="border rounded-xl p-3 md:col-span-2 h-24"
-                    placeholder="Rojo, Azul, Negro"></textarea>
+                </div>
 
             </div>
 
-        </div>
+            <!-- Formulario -->
 
-        <!-- Lista -->
+            <div class="bg-white rounded-2xl shadow p-8 mb-8">
 
-        <div class="bg-white rounded-2xl shadow p-8">
-
-            <div class="flex justify-between items-center mb-6">
-
-                <h3 class="text-xl font-bold">
-                    Productos registrados
+                <h3 class="text-xl font-bold mb-6">
+                    Información del producto
                 </h3>
 
-                <input
-                    id="buscar"
-                    placeholder="Buscar..."
-                    class="border rounded-xl px-4 py-2 w-72">
+                <div class="grid md:grid-cols-2 gap-4">
+
+                    <input id="name" class="border rounded-xl p-3" placeholder="Nombre">
+
+                    <input id="price" type="number" class="border rounded-xl p-3" placeholder="Precio">
+
+                    <input id="oldPrice" type="number" class="border rounded-xl p-3" placeholder="Precio anterior">
+
+                    <input id="category" class="border rounded-xl p-3" placeholder="Categoría">
+
+                    <input id="origin" class="border rounded-xl p-3" placeholder="Origen">
+
+                    <input id="bodegaName" class="border rounded-xl p-3" placeholder="Bodega">
+
+                    <input id="video" class="border rounded-xl p-3" placeholder="Video">
+
+                    <select id="freeShipping" class="border rounded-xl p-3">
+
+                        <option value="">Envío gratis</option>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+
+                    </select>
+
+                    <div class="md:col-span-2">
+
+                        <label class="block font-semibold mb-2 text-slate-700">
+
+                            Descripción del producto
+
+                        </label>
+
+                        <div id="editor" class="bg-white h-72 rounded-xl">
+
+                        </div>
+
+                    </div>
+
+                    <textarea id="images" class="border rounded-xl p-3 md:col-span-2 h-24"
+                        placeholder="https://imagen1.jpg, https://imagen2.jpg"></textarea>
+
+                    <textarea id="variants" class="border rounded-xl p-3 md:col-span-2 h-24"
+                        placeholder="Rojo, Azul, Negro"></textarea>
+
+                </div>
 
             </div>
 
-            <div id="lista"></div>
+            <!-- Lista -->
 
-        </div>
+            <div class="bg-white rounded-2xl shadow p-8">
 
-    </main>
+                <div class="flex justify-between items-center mb-6">
 
-</div>
+                    <h3 class="text-xl font-bold">
+                        Productos registrados
+                    </h3>
 
-<script src="admin.js"></script>
+                    <input id="buscar" placeholder="Buscar..." class="border rounded-xl px-4 py-2 w-72">
+
+                </div>
+
+                <div id="lista"></div>
+
+            </div>
+
+        </main>
+
+    </div>
+
+    <script src="admin.js"></script>
 
 </body>
+
 </html>
