@@ -7,35 +7,142 @@ let productoEditando = null;
 // EDITOR QUILL
 // ==========================
 
+const toolbarOptions = [
+
+    [{ header: [1, 2, 3, false] }],
+
+    [
+        "bold",
+        "italic",
+        "underline",
+        "strike"
+    ],
+
+    [
+        { color: [] },
+        { background: [] }
+    ],
+
+    [
+        { align: [] }
+    ],
+
+    [
+        { list: "ordered" },
+        { list: "bullet" }
+    ],
+
+    [
+        "blockquote",
+        "code-block"
+    ],
+
+    [
+        "link"
+    ],
+
+    [
+        "image"
+    ],
+
+    [
+        "video"
+    ],
+
+    [
+        "clean"
+    ]
+
+];
+
 const quill = new Quill("#editor", {
 
     theme: "snow",
 
-    placeholder: "Escribe una descripción atractiva del producto...",
+    placeholder:
+        "Describe tu producto...",
 
     modules: {
 
-        toolbar: [
+        toolbar: {
 
-            [{ header: [1, 2, 3, false] }],
+            container: toolbarOptions,
 
-            ["bold", "italic", "underline", "strike"],
+            handlers: {
 
-            [{ color: [] }, { background: [] }],
+                image: insertarImagen,
 
-            [{ list: "ordered" }, { list: "bullet" }],
+                video: insertarVideo
 
-            ["blockquote"],
+            }
 
-            ["link", "image", "video"],
-
-            ["clean"]
-
-        ]
+        }
 
     }
 
 });
+
+function insertarImagen() {
+
+    const url = prompt("URL de la imagen");
+
+    if (!url) return;
+
+    const range = quill.getSelection(true);
+
+    quill.insertEmbed(
+
+        range.index,
+
+        "image",
+
+        url
+
+    );
+
+}
+
+function insertarVideo() {
+
+    let url = prompt("Pega el enlace de YouTube");
+
+    if (!url) return;
+
+    let id = "";
+
+    if (url.includes("watch?v="))
+
+        id = url.split("watch?v=")[1].split("&")[0];
+
+    else if (url.includes("youtu.be/"))
+
+        id = url.split("youtu.be/")[1].split("?")[0];
+
+    else {
+
+        alert("URL inválida");
+
+        return;
+
+    }
+
+    const embed =
+
+        `https://www.youtube.com/embed/${id}`;
+
+    const range = quill.getSelection(true);
+
+    quill.insertEmbed(
+
+        range.index,
+
+        "video",
+
+        embed
+
+    );
+
+}
 
 // ==========================
 // CARGAR PRODUCTOS
@@ -53,41 +160,41 @@ async function cargarProductos() {
 // ==========================
 // ESTADÍSTICAS
 // ==========================
-function actualizarEstadisticas(){
+function actualizarEstadisticas() {
 
     document.getElementById("totalProductos").textContent =
         productos.length;
 
-    const categorias = [...new Set(productos.map(p=>p.category))];
+    const categorias = [...new Set(productos.map(p => p.category))];
 
     document.getElementById("totalCategorias").textContent =
         categorias.length;
 
     let promedio = 0;
 
-    if(productos.length){
+    if (productos.length) {
 
         promedio =
-            productos.reduce((a,b)=>a+Number(b.price),0)
+            productos.reduce((a, b) => a + Number(b.price), 0)
             / productos.length;
 
     }
 
     document.getElementById("precioPromedio").textContent =
-        "$"+Math.round(promedio).toLocaleString();
+        "$" + Math.round(promedio).toLocaleString();
 
 }
 
 // ==========================
 // RENDER
 // ==========================
-function renderLista(listaProductos){
+function renderLista(listaProductos) {
 
-    const lista=document.getElementById("lista");
+    const lista = document.getElementById("lista");
 
-    if(!listaProductos.length){
+    if (!listaProductos.length) {
 
-        lista.innerHTML=`
+        lista.innerHTML = `
         <div class="bg-white rounded-xl shadow p-10 text-center text-gray-500">
             No hay productos registrados.
         </div>
@@ -97,7 +204,7 @@ function renderLista(listaProductos){
 
     }
 
-    lista.innerHTML=listaProductos.map(p=>`
+    lista.innerHTML = listaProductos.map(p => `
 
 <div class="bg-white rounded-2xl shadow p-5 mb-4">
 
@@ -106,7 +213,7 @@ function renderLista(listaProductos){
 <div class="flex gap-4 items-center">
 
 <img
-src="${(p.images || '').split(',')[0].replace('[','').replace(']','').replace(/"/g,'')}"
+src="${(p.images || '').split(',')[0].replace('[', '').replace(']', '').replace(/"/g, '')}"
 class="w-20 h-20 rounded-xl object-cover border">
 
 <div>
@@ -158,45 +265,45 @@ Eliminar
 // ==========================
 // GUARDAR
 // ==========================
-async function guardarProducto(){
+async function guardarProducto() {
 
-    const producto={
+    const producto = {
 
-        name:document.getElementById("name").value,
-        price:Number(document.getElementById("price").value),
-        oldPrice:Number(document.getElementById("oldPrice").value),
-        category:document.getElementById("category").value,
+        name: document.getElementById("name").value,
+        price: Number(document.getElementById("price").value),
+        oldPrice: Number(document.getElementById("oldPrice").value),
+        category: document.getElementById("category").value,
         description: quill.root.innerHTML,
-        images:document.getElementById("images").value,
-        video:document.getElementById("video").value,
-        variants:document.getElementById("variants").value,
-        origin:document.getElementById("origin").value,
-        bodegaName:document.getElementById("bodegaName").value,
-        freeShipping:document.getElementById("freeShipping").value
+        images: document.getElementById("images").value,
+        video: document.getElementById("video").value,
+        variants: document.getElementById("variants").value,
+        origin: document.getElementById("origin").value,
+        bodegaName: document.getElementById("bodegaName").value,
+        freeShipping: document.getElementById("freeShipping").value
 
     };
 
     if (productoEditando) {
-    
-    producto.id = productoEditando;
-    
-}
 
-const res = await fetch("/api/producto", {
-    
-    method: productoEditando ? "PUT" : "POST",
-    
-    headers: {
-        "Content-Type": "application/json"
-    },
-    
-    body: JSON.stringify(producto)
-    
-});
+        producto.id = productoEditando;
 
-    const data=await res.json();
+    }
 
-    if(!data.success){
+    const res = await fetch("/api/producto", {
+
+        method: productoEditando ? "PUT" : "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify(producto)
+
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
 
         alert(data.error);
         return;
@@ -204,10 +311,10 @@ const res = await fetch("/api/producto", {
     }
 
     alert(
-    productoEditando ?
-    "Producto actualizado correctamente." :
-    "Producto guardado correctamente."
-);
+        productoEditando ?
+            "Producto actualizado correctamente." :
+            "Producto guardado correctamente."
+    );
 
     limpiarFormulario();
 
@@ -218,9 +325,9 @@ const res = await fetch("/api/producto", {
 // ==========================
 // LIMPIAR
 // ==========================
-function limpiarFormulario(){
+function limpiarFormulario() {
 
-    productoEditando=null;
+    productoEditando = null;
 
     [
         "name",
@@ -234,15 +341,15 @@ function limpiarFormulario(){
         "bodegaName",
         "freeShipping"
 
-    ].forEach(id=>{
+    ].forEach(id => {
 
-        document.getElementById(id).value="";
+        document.getElementById(id).value = "";
 
     });
 
     quill.setContents([]);
 
-    document.getElementById("btnGuardar").innerHTML=
+    document.getElementById("btnGuardar").innerHTML =
         "+ Nuevo Producto";
 
 }
@@ -251,13 +358,13 @@ function limpiarFormulario(){
 // EDITAR
 // ==========================
 function editarProducto(id) {
-    
+
     const p = productos.find(x => x.id === id);
-    
+
     if (!p) return;
-    
+
     productoEditando = p.id;
-    
+
     document.getElementById("name").value = p.name || "";
     document.getElementById("price").value = p.price || "";
     document.getElementById("oldPrice").value = p.oldPrice || "";
@@ -269,28 +376,28 @@ function editarProducto(id) {
     document.getElementById("origin").value = p.origin || "";
     document.getElementById("bodegaName").value = p.bodegaName || "";
     document.getElementById("freeShipping").value = p.freeShipping || "";
-    
+
     document.getElementById("btnGuardar").innerHTML =
         "💾 Actualizar Producto";
-    
+
     window.scrollTo({
         top: 0,
         behavior: "smooth"
     });
-    
+
 }
 
 // ==========================
 // ELIMINAR
 // ==========================
-async function eliminarProducto(id){
+async function eliminarProducto(id) {
 
-    if(!confirm("¿Eliminar este producto?"))
+    if (!confirm("¿Eliminar este producto?"))
         return;
 
-    await fetch("/api/producto?id="+id,{
+    await fetch("/api/producto?id=" + id, {
 
-        method:"DELETE"
+        method: "DELETE"
 
     });
 
@@ -301,13 +408,13 @@ async function eliminarProducto(id){
 // ==========================
 // BUSCADOR
 // ==========================
-document.getElementById("buscar").addEventListener("input",e=>{
+document.getElementById("buscar").addEventListener("input", e => {
 
-    const texto=e.target.value.toLowerCase();
+    const texto = e.target.value.toLowerCase();
 
     renderLista(
 
-        productos.filter(p=>
+        productos.filter(p =>
 
             p.name.toLowerCase().includes(texto)
             ||
