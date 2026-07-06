@@ -64,13 +64,26 @@
 
             </div>
 
-            <button
-                onclick="guardarProducto()"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow">
+            <div class="flex gap-3">
 
-                + Guardar Producto
+    <button
+        id="btnGuardar"
+        onclick="guardarProducto()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-xl font-bold shadow transition">
 
-            </button>
+        + Nuevo Producto
+
+    </button>
+
+    <button
+        onclick="limpiarFormulario()"
+        class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-semibold transition">
+
+        Limpiar
+
+    </button>
+
+</div>
 
         </div>
 
