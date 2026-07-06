@@ -590,25 +590,22 @@ async function cargarProductos() {
         productos = await response.json();
 
         productos = productos.map(p => ({
-            ...p,
-            images: (() => {
-                try {
-                    return JSON.parse(p.images || "[]");
-                } catch {
-                    return (p.images || "")
-                        .split(",")
-                        .map(i => i.trim())
-                        .filter(Boolean);
-                }
-            })(),
-            variants: (() => {
-                try {
-                    return JSON.parse(p.variants || "[]");
-                } catch {
-                    return [];
-                }
-            })()
-        }));
+    ...p,
+
+    images: p.images
+        ? p.images
+            .split(",")
+            .map(x => x.trim())
+            .filter(Boolean)
+        : [],
+
+    variants: p.variants
+        ? p.variants
+            .split(",")
+            .map(x => x.trim())
+            .filter(Boolean)
+        : []
+}));
 
     } catch (err) {
         console.error("Error cargando productos:", err);
