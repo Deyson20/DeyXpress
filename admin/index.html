@@ -19,10 +19,27 @@
 
 <body class="bg-slate-100 min-h-screen">
 
-    <div class="flex min-h-screen">
+    <div class="flex min-h-screen relative">
 
         <!-- Sidebar -->
-        <aside class="w-64 bg-slate-900 text-white flex flex-col">
+        <!-- Botón menú móvil -->
+
+        <button id="menuBtn" class="lg:hidden fixed top-4 left-4 z-50 bg-slate-900 text-white p-3 rounded-xl shadow-lg">
+
+            ☰
+
+        </button>
+
+        <!-- Fondo oscuro -->
+
+        <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-30">
+
+        </div>
+
+        <!-- Sidebar -->
+
+        <aside id="sidebar"
+            class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
 
             <div class="p-6 border-b border-slate-800">
 
@@ -52,7 +69,7 @@
 
         <!-- Contenido -->
 
-        <main class="flex-1 p-8">
+        <main class="flex-1 w-full p-4 md:p-6 lg:p-8 lg:ml-0">
 
             <!-- Header -->
 
@@ -172,7 +189,21 @@
 
                         </label>
 
-                        <div id="editor" class="bg-white h-72 rounded-xl">
+                        <div id="editor" class="bg-white rounded-xl h-72">
+
+                        </div>
+
+                        <div class="mt-6">
+
+                            <h4 class="font-bold text-slate-700 mb-3">
+
+                                Vista previa
+
+                            </h4>
+
+                            <div id="previewDescripcion" class="bg-slate-50 rounded-2xl border p-6 prose max-w-none">
+
+                            </div>
 
                         </div>
 
@@ -209,6 +240,44 @@
         </main>
 
     </div>
+
+    <script>
+
+        const menuBtn = document.getElementById("menuBtn");
+        const sidebar = document.getElementById("sidebar");
+        const overlay = document.getElementById("overlay");
+
+        menuBtn.addEventListener("click", () => {
+
+            sidebar.classList.remove("-translate-x-full");
+            overlay.classList.remove("hidden");
+
+        });
+
+        overlay.addEventListener("click", () => {
+
+            sidebar.classList.add("-translate-x-full");
+            overlay.classList.add("hidden");
+
+        });
+
+        window.addEventListener("resize", () => {
+
+            if (window.innerWidth >= 1024) {
+
+                overlay.classList.add("hidden");
+
+                sidebar.classList.remove("-translate-x-full");
+
+            } else {
+
+                sidebar.classList.add("-translate-x-full");
+
+            }
+
+        });
+
+    </script>
 
     <script src="admin.js"></script>
 
