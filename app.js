@@ -289,8 +289,8 @@ window.handleCatalogError = function(img) {
         const btns = card.querySelectorAll('button');
         btns.forEach(btn => {
             const text = btn.innerText.toLowerCase();
-            // Bloqueamos solo los botones de acción de compra
-            if (text.includes('comprar') || text.includes('añadir')) {
+            // CORREGIDO: Ahora incluye 'whatsapp' y 'pedir' en la validación
+            if (text.includes('comprar') || text.includes('añadir') || text.includes('whatsapp') || text.includes('pedir')) {
                 btn.disabled = true;
                 // Reemplazamos clases para asegurar estilo gris uniforme y sin conflictos
                 btn.className = "py-2 w-full rounded-xl font-bold text-xs bg-slate-100 text-slate-400 border border-slate-200 cursor-not-allowed";
@@ -320,7 +320,8 @@ window.handleDetailError = function(img) {
         const btns = container.querySelectorAll('button');
         btns.forEach(btn => {
             const text = btn.innerText.toLowerCase();
-            if (text.includes('comprar') || text.includes('añadir')) {
+            // CORREGIDO: Ahora incluye 'whatsapp' y 'pedir' en la vista de detalle
+            if (text.includes('comprar') || text.includes('añadir') || text.includes('whatsapp') || text.includes('pedir')) {
                 btn.disabled = true;
                 // Reemplazamos clases para asegurar estilo gris uniforme (manteniendo tamaño grande)
                 btn.className = "w-full py-4 rounded-xl font-bold bg-slate-100 text-slate-400 border-2 border-slate-200 cursor-not-allowed uppercase tracking-wider";
@@ -333,6 +334,7 @@ window.handleDetailError = function(img) {
         });
     }
 };
+
 
 // 3. FUNCIÓN AUXILIAR (Añádela justo debajo de la anterior)
 window.updateThumbUI = function(selectedThumb) {
