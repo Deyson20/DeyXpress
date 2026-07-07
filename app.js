@@ -27,7 +27,8 @@ let scrollPosition = 0; // Esta variable recordará dónde estabas
 // 4. FUNCIONES DE RENDERIZADO
 function loadCategories() {
     if (!categoriesMenuList) return;
-    const cats = ["Todos", ...new Set(productos.map(p => p.category))];
+    // CORREGIDO: Limpiamos espacios en blanco con trim() antes de aplicar el Set para eliminar duplicados
+    const cats = ["Todos", ...new Set(productos.map(p => p.category ? p.category.trim() : "").filter(Boolean))];
     categoriesMenuList.innerHTML = "";
     
     cats.forEach(cat => {
