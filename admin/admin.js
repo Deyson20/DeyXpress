@@ -205,12 +205,18 @@ function renderLista(listaProductos) {
         if (p.images) {
             imagenUrl = p.images.split(',')[0].replace('[', '').replace(']', '').replace(/"/g, '').trim();
         }
+        
+        // Si no tiene imagen asignada en la base de datos, forzamos un string cualquiera para que salte el onerror
+        if (!imagenUrl) {
+            imagenUrl = "sin-foto";
+        }
 
         return `
         <div class="bg-white rounded-2xl shadow p-5 mb-4 border border-slate-100">
             <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
                 <div class="flex gap-4 items-center">
-                    <img src="${imagenUrl || 'https://via.placeholder.com/80'}" 
+                    <img src="${imagenUrl}" 
+                         onerror="this.src='https://placehold.co/600x600/e2e8f0/64748b?text=PRODUCTO+AGOTADO'; this.onerror=null;"
                          class="w-20 h-20 rounded-xl object-cover border flex-shrink-0" 
                          alt="${p.name}">
                     <div>
@@ -242,6 +248,7 @@ function renderLista(listaProductos) {
         `;
     }).join("");
 }
+
 
 
 
