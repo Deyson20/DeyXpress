@@ -215,7 +215,22 @@ function showProductDetail(product) {
     ` : '';
     
     
-    // 2. Renderizado del HTML con Galería
+        // NUEVO: Cálculo dinámico de fechas de entrega (2 a 5 días hábiles, sin domingos)
+    function calcularFechaEntrega(diasExtra) {
+        let fecha = new Date();
+        let diasSumados = 0;
+        while (diasSumados < diasExtra) {
+            fecha.setDate(fecha.getDate() + 1);
+            if (fecha.getDay() !== 0) { // 0 representa Domingo, lo saltamos
+                diasSumados++;
+            }
+        }
+        return fecha.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'short' });
+    }
+    const fechaMinima = calcularFechaEntrega(2);
+    const fechaMaxima = calcularFechaEntrega(5);
+
+    // 2. Renderizado del HTML con Galería y Fecha Estimada Dinámica
     detailContent.innerHTML = `
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 bg-white p-6 rounded-3xl border shadow-sm">
       <div class="flex flex-col gap-4">
@@ -240,15 +255,28 @@ function showProductDetail(product) {
 
       <div class="text-left flex flex-col">
         <h2 class="text-xl md:text-2xl font-extrabold text-slate-800 break-words leading-tight" style="hyphens: auto; -webkit-hyphens: auto;">
-    ${product.name}
-</h2>
-        ${product.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-xs font-black px-3 py-1 rounded-full w-fit mt-2">🚀 ENVÍO GRATIS</span>' : ''}
-        <div class="my-4">
-    ${product.oldPrice && Number(product.oldPrice) > 0 ? `<p class="text-sm text-slate-400 line-through">Antes: ${formatter.format(product.oldPrice)}</p>` : ''}
-    <p class="text-indigo-600 text-3xl font-black">${formatter.format(product.price)}</p>
-</div>
+            ${product.name}
+        </h2>
+        
+        ${product.freeShipping === "true" ? '<span class="bg-green-100 text-green-700 text-xs font-black px-3 py-1 rounded-full w-fit mt-2 mb-1">🚀 ENVÍO GRATIS</span>' : ''}
+        
+        <div class="w-full bg-slate-50 border border-slate-200/60 rounded-xl p-3 my-3 flex items-center gap-3">
+            <span class="text-xl">📅</span>
+            <div>
+                <p class="text-[11px] text-slate-400 font-bold uppercase tracking-wide">Tiempo estimado de entrega</p>
+                <p class="text-xs sm:text-sm font-bold text-slate-700 mt-0.5">
+                    Llega entre el <span class="text-indigo-600 capitalize">${fechaMinima}</span> y el <span class="text-indigo-600 capitalize">${fechaMaxima}</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            ${product.oldPrice && Number(product.oldPrice) > 0 ? `<p class="text-sm text-slate-400 line-through">Antes: ${formatter.format(product.oldPrice)}</p>` : ''}
+            <p class="text-indigo-600 text-3xl font-black">${formatter.format(product.price)}</p>
+        </div>
 
         <div class="text-slate-500 mb-6 text-sm leading-relaxed flex-1">${desc}</div>
+
         
         ${product.variants && product.variants.length > 0 ? `
         <div class="mb-6">
