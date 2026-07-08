@@ -215,8 +215,18 @@ function renderLista(listaProductos) {
                          alt="${p.name}">
                     <div>
                         <h2 class="font-bold text-base sm:text-lg text-slate-800 leading-tight">${p.name}</h2>
-                        <p class="text-slate-500 text-sm">${p.category}</p>
-                        <p class="font-black text-indigo-600 mt-1">$${Number(p.price).toLocaleString()}</p>
+                        <p class="text-slate-500 text-sm font-semibold mb-1">${p.category}</p>
+                        
+                        <div class="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-400 mb-1">
+                            <span class="flex items-center gap-1">
+                                📦 ${p.bodegaName || 'Sin Bodega'}
+                            </span>
+                            <span class="flex items-center gap-1">
+                                📍 ${p.origin || 'Sin Origen'}
+                            </span>
+                        </div>
+
+                        <p class="font-black text-indigo-600">$${Number(p.price).toLocaleString()}</p>
                     </div>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto justify-end border-t sm:border-t-0 pt-3 sm:pt-0 mt-2 sm:mt-0">
@@ -232,6 +242,7 @@ function renderLista(listaProductos) {
         `;
     }).join("");
 }
+
 
 
 // ==========================
