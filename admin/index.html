@@ -24,72 +24,49 @@
         <!-- Sidebar -->
         <!-- Botón menú móvil -->
 
-        <button id="menuBtn" class="lg:hidden fixed top-4 left-4 z-50 bg-slate-900 text-white p-3 rounded-xl shadow-lg">
-
-            ☰
-
-        </button>
-
-        <!-- Fondo oscuro -->
-
-        <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-30">
-
-        </div>
-
-        <!-- Sidebar -->
+                <div id="overlay" class="hidden fixed inset-0 bg-black/50 z-30"></div>
 
         <aside id="sidebar"
             class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-slate-900 text-white transform -translate-x-full lg:translate-x-0 transition-transform duration-300 flex flex-col">
-
             <div class="p-6 border-b border-slate-800">
-
-                <h1 class="text-2xl font-black">
-                    DEYXPRESS
-                </h1>
-
-                <p class="text-slate-400 text-sm mt-1">
-                    Panel Administrativo
-                </p>
-
+                <h1 class="text-2xl font-black">DEYXPRESS</h1>
+                <p class="text-slate-400 text-sm mt-1">Panel Administrativo</p>
             </div>
-
             <nav class="flex-1 p-4 space-y-2">
-
                 <button class="w-full text-left bg-indigo-600 px-4 py-3 rounded-xl font-semibold">
                     📦 Productos
                 </button>
-
                 <button class="w-full text-left hover:bg-slate-800 px-4 py-3 rounded-xl">
                     ⚙ Configuración
                 </button>
-
             </nav>
-
         </aside>
 
-        <!-- Contenido -->
+        <main class="flex-1 w-full p-4 md:p-6 lg:p-8 lg:ml-0">
 
-                <main class="flex-1 w-full p-4 md:p-6 lg:p-8 lg:ml-0">
-
-            <div class="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-100 p-4 mb-6 shadow-sm flex items-center justify-between sticky top-4 z-20 mt-14 lg:mt-0">
+            <div class="bg-white/80 backdrop-blur-md rounded-2xl border border-slate-100 p-4 mb-6 shadow-sm flex items-center justify-between sticky top-4 z-20">
                 <div class="flex items-center gap-3">
-                    <div class="w-2.5 h-6 bg-slate-900 rounded-full"></div>
+                    <button id="menuBtn" class="lg:hidden text-slate-900 hover:bg-slate-100 p-2 rounded-xl text-xl transition font-bold leading-none">
+                        ☰
+                    </button>
+                    <div class="hidden lg:block w-2.5 h-6 bg-slate-900 rounded-full"></div>
                     <div>
-                        <h1 class="text-xl font-black text-slate-900 uppercase tracking-tighter">DEYXPRESS</h1>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest -mt-1">PANEL ADMINISTRATIVO</p>
+                        <h1 class="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tighter leading-none">DEYXPRESS</h1>
+                        <p class="text-[9px] sm:text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">PANEL ADMINISTRATIVO</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
                     <button id="btnGuardar" onclick="guardarProducto()"
-                        class="bg-slate-900 hover:bg-slate-800 text-white px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider shadow transition">
+                        class="bg-slate-900 hover:bg-slate-800 text-white px-3 sm:px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider shadow transition">
                         + Nuevo
                     </button>
                     <button onclick="limpiarFormulario()"
-                        class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider transition">
+                        class="bg-white border border-slate-300 hover:bg-slate-100 text-slate-700 px-3 sm:px-4 py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition">
                         Limpiar
                     </button>
                 </div>
             </div>
+
 
 
             <!-- Tarjetas -->
