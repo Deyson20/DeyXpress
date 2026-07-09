@@ -448,22 +448,28 @@ function updateCart() {
     
     
     
-    cart.forEach((item, index) => {
+        // NUEVA LÓGICA: Procesar el carrito para agrupar por Bodega Única primero
+    cart.forEach(item => {
         subtotal += item.price * item.qty;
-        // Solo cobramos flete si el producto NO tiene envío gratis
-        if (item.freeShipping !== "true") {
-            bodegasUnicas.add(item.origin || "Nacional");
-        }
         count += item.qty;
         
-        // Lógica para mostrar flete individual
+        // Si el producto NO tiene envío gratis, agregamos su origen al Set
+        if (item.freeShipping !== "true" && item.freeShipping !== true) {
+            const origenLimpio = (item.origin || "Nacional").trim().toLowerCase();
+            bodegasUnicas.add(origenLimpio);
+        }
+    });
+
+    cart.forEach((item, index) => {
+        // Lógica visual para mostrar la etiqueta informativa por cada producto en la lista
         let shippingDisplay = "";
-        if (item.freeShipping === "true") {
+        if (item.freeShipping === "true" || item.freeShipping === true) {
             shippingDisplay = `<span class="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded">🚀 Envío Gratis</span>`;
         } else {
             const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
-            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Flete: ${formatter.format(tarifa)}</span>`;
+            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Origen: ${item.origin || "Nacional"} (${formatter.format(tarifa)})</span>`;
         }
+
         
         const div = document.createElement("div");
         div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
