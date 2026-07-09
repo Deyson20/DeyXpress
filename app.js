@@ -440,93 +440,30 @@ function updateCart() {
         return; // Detenemos la ejecución aquí porque no hay nada que listar
     }
     
-    if (function updateCart() {
-    localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
-    if (!cartItems) return;
-    const btnCheckout = document.getElementById("btnCheckout");
-    
-    if (cart.length === 0) {
-        cartItems.innerHTML = `
-            <div class="flex flex-col items-center justify-center py-12 text-slate-400">
-                <i class="fas fa-shopping-basket text-4xl mb-4"></i>
-                <p class="font-medium">Tu carrito está vacío</p>
-                <button onclick="toggleCart()" class="mt-4 text-indigo-600 text-sm font-bold uppercase">
-                    Explorar productos
-                </button>
-            </div>
-        `;
-        cartTotal.textContent = formatter.format(0);
-        if (document.getElementById("cartSubtotal")) document.getElementById("cartSubtotal").textContent = formatter.format(0);
-        if (document.getElementById("cartShipping")) document.getElementById("cartShipping").textContent = formatter.format(0);
-        cartCounter.classList.add("hidden");
-        if (btnCheckout) btnCheckout.disabled = true;
-        
-        if (!orderFormView.classList.contains("hidden")) {
-            showCatalog();
-        }
-        return;
-    }
-    
     if (btnCheckout) btnCheckout.disabled = false;
     cartItems.innerHTML = "";
     let subtotal = 0;
     let count = 0;
+    const bodegasUnicas = new Set(); // Detecta bodegas sin repetir
     
-    // 1. Agrupar tarifas usando el Nombre de la Bodega
-    const bodegasUnicas = new Set();
-    const tarifasPorBodega = {}; 
     
-    cart.forEach(item => {
+    
+    cart.forEach((item, index) => {
         subtotal += item.price * item.qty;
+        // Solo cobramos flete si el producto NO tiene envío gratis
+        if (item.freeShipping !== "true") {
+            bodegasUnicas.add(item.origin || "Nacional");
+        }
         count += item.qty;
         
-        if (item.freeShipping !== "true" && item.freeShipping !== true) {
-            const nombreBodega = item.bodegaName ? item.bodegaName.trim().toLowerCase() : "general";
-            bodegasUnicas.add(nombreBodega);
-            tarifasPorBodega[nombreBodega] = obtenerTarifaPorOrigen(item.origin || "Nacional");
-        }
-    });
-
-    // 2. Sumar el flete único de cada bodega detectada
-    let totalFlete = 0;
-    bodegasUnicas.forEach(nombreBodega => {
-        totalFlete += tarifasPorBodega[nombreBodega];
-    });
-
-    // 3. Volver a dibujar (renderizar) los productos en el carrito
-    cart.forEach((item, index) => {
+        // Lógica para mostrar flete individual
         let shippingDisplay = "";
-        if (item.freeShipping === "true" || item.freeShipping === true) {
+        if (item.freeShipping === "true") {
             shippingDisplay = `<span class="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded">🚀 Envío Gratis</span>`;
         } else {
             const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
-            const nombreMostrar = item.bodegaName || "Estándar";
-            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Bodega: ${nombreMostrar} (${formatter.format(tarifa)})</span>`;
+            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Flete: ${formatter.format(tarifa)}</span>`;
         }
-        
-        const div = document.createElement("div");
-        div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
-        div.innerHTML = `
-          <img src="${item.images[0]}" onerror="this.src='https://placehold.co/100x100/e2e8f0/64748b?text=AGOTADO'; this.onerror=null;" class="w-12 h-12 object-cover rounded-lg">
-          <div class="flex-1">
-            <h4 class="text-xs font-bold line-clamp-1">${item.name}</h4>
-            ${item.variant ? `<p class="text-[10px] text-slate-500 bg-slate-100 inline-block px-1 rounded mt-0.5">Opción: ${item.variant}</p>` : ''}
-            <div class="flex flex-col mt-0.5">
-                <p class="text-indigo-600 font-black text-sm">${formatter.format(item.price)}</p>
-                ${shippingDisplay}
-            </div>
-            <div class="flex items-center gap-2 mt-1">
-              <button onclick="changeQty(${index}, -1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">-</button>
-              <span class="text-xs font-bold">${item.qty}</span>
-              <button onclick="changeQty(${index}, 1)" class="w-6 h-6 bg-white border rounded flex items-center justify-center text-xs">+</button>
-            </div>
-          </div>
-          <button onclick="removeFromCart(${index})" class="text-slate-300 hover:text-red-500"><i class="fas fa-trash-alt"></i></button>
-        `;
-        cartItems.appendChild(div);
-    });
-
-
         
         const div = document.createElement("div");
         div.className = "flex items-center gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100";
