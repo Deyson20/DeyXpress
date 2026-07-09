@@ -440,35 +440,40 @@ function updateCart() {
         return; // Detenemos la ejecución aquí porque no hay nada que listar
     }
     
-    if (btnCheckout) btnCheckout.disabled = false;
+    if (    if (btnCheckout) btnCheckout.disabled = false;
     cartItems.innerHTML = "";
     let subtotal = 0;
     let count = 0;
-    const bodegasUnicas = new Set(); // Detecta bodegas sin repetir
     
+    // Agrupamos usando el nombre único de la bodega
+    const bodegasUnicas = new Set();
+    const tarifasPorBodega = {}; 
     
-    
-        // NUEVA LÓGICA: Procesar el carrito para agrupar por Bodega Única primero
     cart.forEach(item => {
         subtotal += item.price * item.qty;
         count += item.qty;
         
-        // Si el producto NO tiene envío gratis, agregamos su origen al Set
+        // Solo sumamos flete si el producto NO tiene envío gratis
         if (item.freeShipping !== "true" && item.freeShipping !== true) {
-            const origenLimpio = (item.origin || "Nacional").trim().toLowerCase();
-            bodegasUnicas.add(origenLimpio);
+            // Usamos el nombre de la bodega como identificador único
+            const nombreBodega = item.bodegaName ? item.bodegaName.trim().toLowerCase() : "general";
+            bodegasUnicas.add(nombreBodega);
+            
+            // Guardamos la tarifa de flete correspondiente a su lugar físico de origen
+            tarifasPorBodega[nombreBodega] = obtenerTarifaPorOrigen(item.origin || "Nacional");
         }
     });
 
     cart.forEach((item, index) => {
-        // Lógica visual para mostrar la etiqueta informativa por cada producto en la lista
         let shippingDisplay = "";
         if (item.freeShipping === "true" || item.freeShipping === true) {
             shippingDisplay = `<span class="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded">🚀 Envío Gratis</span>`;
         } else {
             const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
-            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Origen: ${item.origin || "Nacional"} (${formatter.format(tarifa)})</span>`;
+            const nombreMostrar = item.bodegaName || "Estándar";
+            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Bodega: ${nombreMostrar} (${formatter.format(tarifa)})</span>`;
         }
+
 
         
         const div = document.createElement("div");
