@@ -1,0 +1,122 @@
+// functions/api/login.js
+
+// Función auxiliar para verificar la contraseña usando criptografía nativa de Cloudflare (PBKDF2)
+async function verificarPassword(passwordPlano, hashGuardado) {
+    try {
+        if (!hashGuardado || !hashGuardado.includes('.')) return false;
+        
+        const [saltHex, originalHashHex] = hashGuardado.split('.');
+        if (!saltHex || !originalHashHex) return false;
+
+        const encoder = new TextEncoder();
+        const passwordBuffer = encoder.encode(passwordPlano);
+        const saltBuffer = new Uint8Array(saltHex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+
+        const baseKey = await crypto.subtle.importKey(
+            "raw",
+            passwordBuffer,
+            "PBKDF2",
+            false,
+            ["deriveBits", "deriveKey"]
+        );
+
+        const hashDerivadoBuffer = await crypto.subtle.deriveBits(
+            {
+                name: "PBKDF2",
+                salt: saltBuffer,
+                iterations: 100000,
+                hash: "SHA-256"
+            },
+            baseKey,
+            256
+        );
+
+        const hashDerivadoHex = Array.from(new Uint8Array(hashDerivadoBuffer))
+            .map(b => b.toString(16).padStart(2, '0'))
+            .join('');
+
+        return hashDerivadoHex === originalHashHex;
+    } catch (e) {
+        console.error("Error en verificación criptográfica:", e);
+        return false;
+    }
+}
+
+// Handler de Cloudflare Pages para interceptar peticiones POST en /api/login
+export async function onRequestPost(context) {
+    const { request, env } = context;
+
+    try {
+        const bodyText = await request.text();
+        if (!bodyText) {
+            return new Response(JSON.stringify({ error: "Petición vacía recibida en el servidor." }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        const { username, password } = JSON.parse(bodyText);
+
+        if (!username || !password) {
+            return new Response(JSON.stringify({ error: "Por favor, llena todos los campos." }), {
+                status: 400,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        // Validar vinculación de D1
+        if (!env.DB) {
+            return new Response(JSON.stringify({ error: "Error: La variable 'env.DB' no está vinculada en el panel de Cloudflare." }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        // 1. Buscar el administrador en la tabla de D1
+        let user;
+        try {
+            user = await env.DB.prepare("SELECT * FROM admin_users WHERE username = ?")
+                .bind(username.trim().toLowerCase())
+                .first();
+        } catch (dbError) {
+            return new Response(JSON.stringify({ error: "Error en D1: " + dbError.message + ". ¿Creaste la tabla 'admin_users'?" }), {
+                status: 500,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        if (!user) {
+            return new Response(JSON.stringify({ error: "Usuario o contraseña incorrectos." }), {
+                status: 401,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        // 2. Validar la contraseña criptográficamente
+        const esValida = await verificarPassword(password, user.password_hash);
+
+        if (!esValida) {
+            return new Response(JSON.stringify({ error: "Usuario o contraseña incorrectos." }), {
+                status: 401,
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+
+        // 3. Login Exitoso: Generar un token único
+        const tokenSession = crypto.randomUUID();
+
+        return new Response(JSON.stringify({ success: true, token: tokenSession }), {
+            status: 200,
+            headers: {
+                "Content-Type": "application/json",
+                "Set-Cookie": `admin_session=${tokenSession}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=86400`
+            }
+        });
+
+    } catch (error) {
+        return new Response(JSON.stringify({ error: "Error crítico en el backend: " + error.message }), {
+            status: 500,
+            headers: { "Content-Type": "application/json" }
+        });
+    }
+}
