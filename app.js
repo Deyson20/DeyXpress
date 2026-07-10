@@ -479,7 +479,7 @@ function updateCart() {
         } else {
             const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
             const nombreMostrar = item.bodegaName || "Estándar";
-            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Bodega: ${nombreMostrar} (${formatter.format(tarifa)})</span>`;
+            shippingDisplay = "";
         }
         
         const div = document.createElement("div");
