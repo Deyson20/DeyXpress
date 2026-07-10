@@ -411,6 +411,7 @@ function showCatalog() {
 
 
 // 6. LÓGICA DEL CARRITO
+// 6. LÓGICA DEL CARRITO
 function updateCart() {
     localStorage.setItem("cart_deyxpress", JSON.stringify(cart));
     if (!cartItems) return;
@@ -444,25 +445,41 @@ function updateCart() {
     cartItems.innerHTML = "";
     let subtotal = 0;
     let count = 0;
-    const bodegasUnicas = new Set(); // Detecta bodegas sin repetir
     
+    // Agrupación inteligente basada en el nombre único de la bodega
+    const bodegasUnicas = new Set(); 
+    const tarifasPorBodega = {}; 
     
-    
-    cart.forEach((item, index) => {
+    cart.forEach(item => {
         subtotal += item.price * item.qty;
-        // Solo cobramos flete si el producto NO tiene envío gratis
-        if (item.freeShipping !== "true") {
-            bodegasUnicas.add(item.origin || "Nacional");
-        }
         count += item.qty;
         
-        // Lógica para mostrar flete individual
+        // Solo cobra flete si el producto NO tiene envío gratis explícito
+        if (item.freeShipping !== "true" && item.freeShipping !== true) {
+            const nombreBodega = item.bodegaName ? item.bodegaName.trim().toLowerCase() : "general";
+            bodegasUnicas.add(nombreBodega);
+            // Mapeamos el nombre único a la tarifa de su origen correspondiente
+            tarifasPorBodega[nombreBodega] = obtenerTarifaPorOrigen(item.origin || "Nacional");
+        }
+    });
+
+    // Sumar una sola tarifa por cada bodega única identificada
+    let totalFlete = 0;
+    bodegasUnicas.forEach(nombreBodega => {
+        totalFlete += tarifasPorBodega[nombreBodega];
+    });
+    
+    const granTotal = subtotal + totalFlete;
+    
+    // Renderizado individual de los productos en la interfaz
+    cart.forEach((item, index) => {
         let shippingDisplay = "";
-        if (item.freeShipping === "true") {
+        if (item.freeShipping === "true" || item.freeShipping === true) {
             shippingDisplay = `<span class="text-green-600 text-[10px] font-bold bg-green-50 px-2 py-0.5 rounded">🚀 Envío Gratis</span>`;
         } else {
             const tarifa = obtenerTarifaPorOrigen(item.origin || "Nacional");
-            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Flete: ${formatter.format(tarifa)}</span>`;
+            const nombreMostrar = item.bodegaName || "Estándar";
+            shippingDisplay = `<span class="text-slate-500 text-[10px] font-medium">Bodega: ${nombreMostrar} (${formatter.format(tarifa)})</span>`;
         }
         
         const div = document.createElement("div");
@@ -487,13 +504,7 @@ function updateCart() {
         cartItems.appendChild(div);
     });
     
-    // Calculamos el flete sumando el costo individual de cada bodega detectada
-    let totalFlete = 0;
-    bodegasUnicas.forEach(origen => totalFlete += obtenerTarifaPorOrigen(origen));
-    
-    const granTotal = subtotal + totalFlete;
-    
-    // Actualizar Subtotal y Envío
+    // Actualizar Subtotal y Envío globales en la interfaz
     if (document.getElementById("cartSubtotal")) document.getElementById("cartSubtotal").textContent = formatter.format(subtotal);
     if (document.getElementById("cartShipping")) document.getElementById("cartShipping").textContent = formatter.format(totalFlete);
     
@@ -507,6 +518,7 @@ function updateCart() {
     const btnConfirmar = document.querySelector("#orderForm button[type='submit']");
     if (btnConfirmar) btnConfirmar.innerHTML = `<i class="fab fa-whatsapp text-2xl"></i> PEDIR POR WHATSAPP (${formatter.format(granTotal)})`;
 }
+
 
 // Función inteligente para calcular tarifa según Origen vs Destino
 function obtenerTarifaPorOrigen(origenBodega) {
@@ -767,19 +779,28 @@ document.getElementById("orderForm")?.addEventListener("submit", function(e) {
     // ... (Aquí capturas todas tus variables: nombre, ciudad, barrio, compromiso, etc.)
     
     
-    // CÓDIGO CORREGIDO
-    // 1. Identificar solo las bodegas de los productos que NO tienen envío gratis
-    const productosConCostoEnvio = cart.filter(p => p.freeShipping !== "true");
-    const bodegasDetectadas = [...new Set(productosConCostoEnvio.map(p => p.origin || "Nacional"))];
+      // CÓDIGO CORREGIDO: Agrupación y cálculo por el nombre exacto de la bodega
+        // CÓDIGO CORREGIDO: Agrupación y flete unificado por Nombre de Bodega
+    const productosConCostoEnvio = cart.filter(p => p.freeShipping !== "true" && p.freeShipping !== true);
+    const bodegasDetectadas = new Set();
+    const tarifasPorBodegaWhatsApp = {};
+    
+    productosConCostoEnvio.forEach(p => {
+        const idBodega = p.bodegaName ? p.bodegaName.trim().toLowerCase() : "general";
+        bodegasDetectadas.add(idBodega);
+        // Usamos p.origin directo tal como se hace en updateCart()
+        tarifasPorBodegaWhatsApp[idBodega] = obtenerTarifaPorOrigen(p.origin || "Nacional");
+    });
     
     let fleteFinal = 0;
-    // Solo sumamos flete si hay productos que no tengan envío gratis
-    if (productosConCostoEnvio.length > 0) {
-        bodegasDetectadas.forEach(origen => fleteFinal += obtenerTarifaPorOrigen(origen));
-    }
+    bodegasDetectadas.forEach(idBodega => {
+        fleteFinal += tarifasPorBodegaWhatsApp[idBodega];
+    });
+
     
     const subtotalProductos = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
     const totalConFlete = subtotalProductos + fleteFinal;
+
     
     const nombre = document.getElementById("nombre").value;
     const telefono = document.getElementById("telefono").value;
