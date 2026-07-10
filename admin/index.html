@@ -44,6 +44,9 @@
                 <button class="w-full text-left hover:bg-slate-800 px-4 py-3 rounded-xl">
                     ⚙ Configuración
                 </button>
+                <button onclick="cerrarSesionAdmin()" class="w-full text-left text-red-400 hover:bg-slate-800 px-4 py-3 rounded-xl font-semibold mt-auto flex items-center gap-2">
+                    🚪 Cerrar Sesión
+                </button>
             </nav>
         </aside>
 
@@ -246,6 +249,12 @@
             }
 
         });
+
+        // NUEVA FUNCIÓN: Destruye la cookie y recarga para bloquear el panel
+        window.cerrarSesionAdmin = function() {
+            document.cookie = "admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
+            location.reload();
+        };
 
     </script>
 
