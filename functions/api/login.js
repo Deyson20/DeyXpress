@@ -151,3 +151,15 @@ export async function onRequestPost(context) {
         });
     }
 }
+
+// Endpoint para borrar la cookie de sesión de forma segura desde el servidor
+export async function onRequestDelete(context) {
+    return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+            "Content-Type": "application/json",
+            // Le decimos al navegador que expire la cookie inmediatamente poniéndole Max-Age=0
+            "Set-Cookie": "admin_session=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0"
+        }
+    });
+}
