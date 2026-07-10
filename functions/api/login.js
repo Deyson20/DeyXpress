@@ -72,6 +72,37 @@ export async function onRequestPost(context) {
             });
         }
 
+        // ==========================================================
+        // ATAJO TEMPORAL: AUTO-CREAR EL USUARIO EXACTO EN TU D1
+        // ==========================================================
+        if (username.trim() === "crearadmin" && password === "Admin123456") {
+            const encoder = new TextEncoder();
+            const saltBuffer = crypto.getRandomValues(new Uint8Array(16));
+            const saltHex = Array.from(saltBuffer).map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            const baseKey = await crypto.subtle.importKey(
+                "raw", encoder.encode("Admin123456"), "PBKDF2", false, ["deriveBits"]
+            );
+            const hashBuffer = await crypto.subtle.deriveBits(
+                { name: "PBKDF2", salt: saltBuffer, iterations: 100000, hash: "SHA-256" },
+                baseKey, 256
+            );
+            const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+            const nuevoHashCompleto = `${saltHex}.${hashHex}`;
+
+            // Limpiar e Insertar en D1 usando el motor de Cloudflare
+            await env.DB.prepare("DELETE FROM admin_users WHERE username = 'admin'").run();
+            await env.DB.prepare("INSERT INTO admin_users (username, password_hash) VALUES ('admin', ?)")
+                .bind(nuevoHashCompleto)
+                .run();
+
+            return new Response(JSON.stringify({ error: "✅ ¡Usuario 'admin' creado con éxito en D1! Ahora inicia sesión normalmente con usuario: admin y clave: Admin123456" }), {
+                status: 400, 
+                headers: { "Content-Type": "application/json" }
+            });
+        }
+        // ==========================================================
+
         // 1. Buscar el administrador en la tabla de D1
         let user;
         try {
