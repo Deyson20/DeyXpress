@@ -251,10 +251,18 @@
         });
 
         // NUEVA FUNCIÓN: Destruye la cookie y recarga para bloquear el panel
-        window.cerrarSesionAdmin = function() {
-            document.cookie = "admin_session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
-            location.reload();
-        };
+        window.cerrarSesionAdmin = async function() {
+    try {
+        // Le pedimos al servidor que destruya la cookie HttpOnly
+        await fetch("/api/login", { method: "DELETE" });
+    } catch (err) {
+        console.error("Error al cerrar sesión:", err);
+    }
+    
+    // Pase lo que pase, recargamos la página para que el Middleware lo bote al login
+    location.reload();
+};
+
 
     </script>
 
