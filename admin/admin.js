@@ -417,3 +417,90 @@ document.getElementById("buscar").addEventListener("input", e => {
 });
 
 cargarProductos();
+
+// ==========================================================
+// VISTAS Y NAVEGACIÓN DEL PANEL (PRODUCTOS VS CONFIGURACIÓN)
+// ==========================================================
+window.cambiarVista = function(vista) {
+    const vistaProd = document.getElementById("vistaProductos");
+    const vistaConf = document.getElementById("vistaConfiguracion");
+    const btnProd = document.getElementById("btnVistaProductos");
+    const btnConf = document.getElementById("btnVistaConfig");
+
+    if (vista === "productos") {
+        // Mostrar Productos y Ocultar Configuración
+        vistaProd.classList.remove("hidden");
+        vistaConf.classList.add("hidden");
+        
+        // Estilos activos de botones
+        btnProd.className = "w-full text-left bg-indigo-600 text-white px-4 py-3 rounded-xl font-semibold transition-all";
+        btnConf.className = "w-full text-left hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl transition-all";
+    } else if (vista === "configuracion") {
+        // Mostrar Configuración y Ocultar Productos
+        vistaProd.classList.add("hidden");
+        vistaConf.classList.remove("hidden");
+        
+        // Estilos activos de botones
+        btnConf.className = "w-full text-left bg-indigo-600 text-white px-4 py-3 rounded-xl font-semibold transition-all";
+        btnProd.className = "w-full text-left hover:bg-slate-800 text-slate-300 px-4 py-3 rounded-xl transition-all";
+    }
+    
+    // Si estás en móvil, cierra el sidebar automáticamente al cambiar de vista
+    if (window.innerWidth < 1024) {
+        document.getElementById("sidebar").classList.add("-translate-x-full");
+        document.getElementById("overlay").classList.add("hidden");
+    }
+};
+
+// ==========================================================
+// ENVIAR CAMBIO DE CONTRASEÑA Y USUARIO AL BACKEND (PUT)
+// ==========================================================
+window.cambiarCredencialesAdmin = async function(event) {
+    event.preventDefault(); // Evitar que la página recargue al enviar el formulario
+
+    const msgDiv = document.getElementById("configMessage");
+    const btnSubmit = document.getElementById("btnConfigSubmit");
+    
+    const currentUsername = document.getElementById("currentUsername").value;
+    const newUsername = document.getElementById("newUsername").value;
+    const newPassword = document.getElementById("newPassword").value;
+
+    // Reiniciar estados visuales
+    msgDiv.className = "hidden text-xs font-bold p-3 rounded-xl text-center";
+    btnSubmit.disabled = true;
+    btnSubmit.innerText = "Actualizando seguridad en D1...";
+
+    try {
+        const response = await fetch("/api/login", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ currentUsername, newUsername, newPassword })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || "No se pudieron actualizar los datos de acceso.");
+        }
+
+        // Éxito: Mostrar alerta bonita y forzar cierre de sesión
+        msgDiv.innerText = "✅ Credenciales cambiadas con éxito. Redirigiendo...";
+        msgDiv.classList.remove("hidden");
+        msgDiv.classList.add("bg-green-50", "text-green-600");
+
+        setTimeout(() => {
+            // Recargamos la pestaña. Al haberse eliminado la cookie desde el servidor en el PUT, 
+            // el middleware bloqueará el acceso y lo mandará directo al Login.
+            location.reload();
+        }, 2000);
+
+    } catch (err) {
+        // Error catastrófico o de validación
+        msgDiv.innerText = "⚠️ " + err.message;
+        msgDiv.classList.remove("hidden");
+        msgDiv.classList.add("bg-red-50", "text-red-600");
+        
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "Guardar Nuevas Credenciales";
+    }
+};
