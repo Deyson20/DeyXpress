@@ -397,17 +397,22 @@ window.addToCartFromDetail = function(btnElement) {
     addToCart(currentProduct.id, btnElement, selectedVariant);
 };
 
+// PEGA ESTO EN SU LUGAR:
 function showCatalog() {
     catalogView.classList.remove("hidden");
     productDetailView.classList.add("hidden");
     orderFormView.classList.add("hidden");
     localStorage.setItem("ultima_vista_deyxpress", "catalogo");
-    // Eliminamos el delay para que no interfiera si vienes desde el formulario
-    window.scrollTo({
-        top: scrollPosition || 0,
-        behavior: 'instant'
-    });
+    
+    // Devolvemos al usuario exactamente a la altura donde estaba
+    setTimeout(() => {
+        window.scrollTo({
+            top: scrollPosition || 0,
+            behavior: 'instant'
+        });
+    }, 50); // Un pequeño margen para asegurar que el DOM se haya renderizado
 }
+
 
 
 // 6. LÓGICA DEL CARRITO
@@ -725,41 +730,81 @@ window.closeOrderForm = function() {
 };
 
 
+// PEGA ESTO EN SU LUGAR (Control total de historial y scroll móvil):
+
+// Evento que se dispara en el móvil al pulsar el botón "Atrás"
 window.onpopstate = function(event) {
     const menu = document.getElementById("categoriesMenu");
-    if (menu && !menu.classList.contains("hidden")) { menu.classList.add("hidden"); return; }
-    if (cartSidebar && !cartSidebar.classList.contains("translate-x-full")) { cartSidebar.classList.add("translate-x-full"); return; }
+    // Si el menú lateral de categorías está abierto, lo cerramos en vez de navegar hacia atrás
+    if (menu && !menu.classList.contains("hidden")) { 
+        menu.classList.add("hidden"); 
+        return; 
+    }
     
+    // Si el carrito lateral está abierto, lo cerramos en vez de navegar hacia atrás
+    if (cartSidebar && !cartSidebar.classList.contains("translate-x-full")) { 
+        cartSidebar.classList.add("translate-x-full"); 
+        return; 
+    }
+    
+    // Navegación en base al estado registrado
     if (event.state) {
         const view = event.state.view;
-        if (view === 'catalog') showCatalog(false);
-        else if (view === 'detail') showProductDetail(event.state.product, false);
-        else if (view === 'order') confirmOrder(false);
-    } else { showCatalog(false); }
+        if (view === 'catalog') {
+            _originalShowCatalog(); // Muestra la lista de productos restaurando el scroll
+        } else if (view === 'detail' && event.state.product) {
+            _originalShowProductDetail(event.state.product); // Muestra el detalle del producto
+        } else if (view === 'order') {
+            _originalConfirmOrder(); // Muestra el formulario de WhatsApp
+        }
+    } else { 
+        // Si no hay estado (inicio), por defecto mostramos el catálogo
+        _originalShowCatalog(); 
+    }
 };
 
+// Interceptor para el detalle del producto
 const _originalShowProductDetail = showProductDetail;
 showProductDetail = function(product, push = true) {
+    // 1. Guardamos la posición del scroll actual del catálogo antes de cambiar de vista
+    scrollPosition = window.scrollY;
+    
     _originalShowProductDetail(product);
+    
     if (push) {
         const newUrl = `?id=${product.id}`;
+        // Registramos en el historial que pasamos a la vista 'detail'
         history.pushState({ view: 'detail', product: product }, "", newUrl);
     }
 };
 
+// Interceptor para mostrar el catálogo
 const _originalShowCatalog = showCatalog;
 showCatalog = function(push = true) {
     _originalShowCatalog();
-    if (push) history.pushState({ view: 'catalog' }, "", window.location.pathname);
+    if (push) {
+        // Registramos que volvimos a la raíz del catálogo
+        history.pushState({ view: 'catalog' }, "", window.location.pathname);
+    }
 };
 
+// Interceptor para confirmar el pedido (formulario WhatsApp)
 const _originalConfirmOrder = confirmOrder;
 confirmOrder = function(push = true) {
+    // Guardamos la posición del scroll del detalle (por si acaso)
+    scrollPosition = window.scrollY;
+    
     _originalConfirmOrder();
-    if (push) history.pushState({ view: 'order' }, "", window.location.pathname);
+    
+    if (push) {
+        // Registramos que pasamos a la vista de formulario 'order'
+        history.pushState({ view: 'order' }, "", window.location.pathname);
+    }
 };
 
+// Inicializamos el estado base para que el catálogo sea el punto de partida en el historial
 history.replaceState({ view: 'catalog' }, "");
+
 
 // 9. WHATSAPP FORM - CON CAMPOS COMPLETOS
 document.getElementById("orderForm")?.addEventListener("submit", function(e) {
