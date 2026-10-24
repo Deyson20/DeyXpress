@@ -1,0 +1,8 @@
+name = "deyxpress"
+
+pages_build_output_dir = "."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "deyxpress"
+database_id = "1566861f-c671-4ef6-9704-18a0013522dc"
