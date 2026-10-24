@@ -1,0 +1,165 @@
+body {
+  margin: 40px;
+  background: #f9f9f9;
+  color: #222;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+form {
+  width: 50%;
+  max-width: 400px;
+  min-width: 260px;
+  margin: 30px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 0 10px rgb(0 0 0 / 10%);
+  text-align: left;
+  box-sizing: border-box;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+}
+
+input[type="text"] {
+  display: block;
+  width: 100%;
+  margin: 0 auto 15px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
+button,
+.button-link {
+  border: 0;
+  border-radius: 5px;
+  background: #4caf50;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 10px 15px;
+  text-decoration: none;
+}
+
+button:hover,
+.button-link:hover {
+  background: #3e8e41;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+form button {
+  width: 100%;
+}
+
+.small-button {
+  min-width: 100px;
+  padding: 5px 10px;
+  font-size: 14px;
+}
+
+.logo {
+  display: block;
+  width: 120px;
+  height: auto;
+  margin: 0 auto 15px;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.people-list {
+  max-width: 600px;
+  margin: 20px auto;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+
+.people-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+
+.status {
+  min-height: 1.2em;
+}
+
+.status.error {
+  color: #b00020;
+}
+
+.turn-page {
+  margin-top: 50px;
+}
+
+.turn-card {
+  display: inline-block;
+  width: min(400px, calc(100% - 40px));
+  padding: 30px;
+  border-radius: 10px;
+  background: #f8f9fa;
+  box-shadow: 0 4px 10px rgb(0 0 0 / 20%);
+  box-sizing: border-box;
+}
+
+.turn-title {
+  margin-bottom: 15px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.turn-name {
+  color: #333;
+  font-size: 36px;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
+.turn-position {
+  margin-top: 10px;
+  color: #666;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.turn-actions {
+  margin: 20px 0;
+}
+
+@media (max-width: 520px) {
+  body {
+    margin: 24px 14px;
+  }
+
+  .people-list li {
+    align-items: flex-start;
+  }
+
+  .turn-name {
+    font-size: 30px;
+  }
+}
